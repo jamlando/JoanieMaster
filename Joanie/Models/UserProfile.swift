@@ -1,7 +1,7 @@
 import Foundation
 import Supabase
 
-struct UserProfile: Codable, Identifiable {
+struct UserProfile: Codable, Identifiable, Equatable {
     let id: UUID
     let email: String
     let fullName: String?
@@ -18,6 +18,59 @@ struct UserProfile: Codable, Identifiable {
         case role
         case createdAt = "created_at"
         case updatedAt = "updated_at"
+    }
+    
+    // MARK: - Computed Properties
+    
+    var displayName: String {
+        return fullName ?? email
+    }
+    
+    var initials: String {
+        if let fullName = fullName, !fullName.isEmpty {
+            let components = fullName.components(separatedBy: " ")
+            let initials = components.compactMap { $0.first?.uppercased() }
+            return String(initials.prefix(2))
+        }
+        return String(email.prefix(2).uppercased())
+    }
+    
+    // MARK: - Initializers
+    
+    init(id: UUID, email: String, fullName: String? = nil, avatarURL: String? = nil, role: UserRole = .parent, createdAt: Date = Date(), updatedAt: Date = Date()) {
+        self.id = id
+        self.email = email
+        self.fullName = fullName
+        self.avatarURL = avatarURL
+        self.role = role
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+    
+    // MARK: - Helper Methods
+    
+    func withUpdatedName(_ newName: String) -> UserProfile {
+        return UserProfile(
+            id: id,
+            email: email,
+            fullName: newName,
+            avatarURL: avatarURL,
+            role: role,
+            createdAt: createdAt,
+            updatedAt: Date()
+        )
+    }
+    
+    func withUpdatedAvatar(_ newAvatarURL: String) -> UserProfile {
+        return UserProfile(
+            id: id,
+            email: email,
+            fullName: fullName,
+            avatarURL: newAvatarURL,
+            role: role,
+            createdAt: createdAt,
+            updatedAt: Date()
+        )
     }
 }
 
