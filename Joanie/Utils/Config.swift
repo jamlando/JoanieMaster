@@ -2,9 +2,8 @@ import Foundation
 
 struct Config {
     // MARK: - Supabase Configuration
-    // TODO: Replace with actual Supabase project credentials
-    static let supabaseURL = "https://your-project-id.supabase.co"
-    static let supabaseAnonKey = "your-anon-key"
+    static let supabaseURL = Secrets.supabaseURL
+    static let supabaseAnonKey = Secrets.supabaseAnonKey
     
     // MARK: - App Configuration
     static let appName = "Joanie"
@@ -15,11 +14,11 @@ struct Config {
     static let profileBucketName = "profile-photos"
     
     // MARK: - AI Configuration
-    static let openAIAPIKey = "your-openai-api-key" // TODO: Add when implementing AI features
-    static let xAIAPIKey = "your-xai-api-key" // TODO: Add when implementing AI features
+    static let openAIAPIKey = Secrets.openAIAPIKey
+    static let xAIAPIKey = Secrets.xAIAPIKey
     
     // MARK: - Development Configuration
-    static let isDebugMode = true
+    static let isDebugMode = Secrets.debugMode
     static let enableLogging = true
     
     // MARK: - Helper Methods

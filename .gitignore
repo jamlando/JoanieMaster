@@ -100,7 +100,7 @@ iOSInjectionProject/
 .env.production.local
 
 # API Keys and Secrets
-Config/Secrets.swift
+Joanie/Config/Secrets.swift
 Secrets.plist
 GoogleService-Info.plist
 
