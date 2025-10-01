@@ -162,7 +162,7 @@ class UploadTestSuite: ObservableObject {
             var errors: [Error] = []
             
             // Upload multiple images
-            for i in 0..<testImageCount {
+            for index in 0..<testImageCount {
                 let testImage = createTestImage(size: testImageSize, color: .green)
                 
                 do {
@@ -526,7 +526,7 @@ class UploadTestSuite: ObservableObject {
             let childId = UUID()
             
             do {
-                let _ = try await storageService.uploadArtwork(
+                _ = try await storageService.uploadArtwork(
                     invalidImage,
                     for: childId,
                     title: "Error Test Artwork",

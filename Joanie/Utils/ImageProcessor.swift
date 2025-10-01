@@ -312,13 +312,13 @@ class ImageProcessor: ObservableObject {
         )
     }
     
-    func extractMetadataFromData(_ data: Data) -> (exifData: [String: Any], gpsData: GPSData?) {
+    func extractMetadataFromData(_ data: Data) -> (exifData: [String: Any], gpsData: GPSData?, creationDate: Date?, cameraInfo: CameraInfo?) {
         guard let imageSource = CGImageSourceCreateWithData(data as CFData, nil) else {
-            return ([:], nil)
+            return ([:], nil, nil, nil)
         }
         
         guard let imageProperties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [String: Any] else {
-            return ([:], nil)
+            return ([:], nil, nil, nil)
         }
         
         // Extract EXIF data
@@ -333,7 +333,7 @@ class ImageProcessor: ObservableObject {
         // Extract camera info
         let cameraInfo = extractCameraInfo(from: exifData)
         
-        return (exifData, gpsData)
+        return (exifData, gpsData, creationDate, cameraInfo)
     }
     
     private func extractGPSData(from properties: [String: Any]) -> GPSData? {
@@ -473,11 +473,9 @@ class ImageProcessor: ObservableObject {
             [0xCF, 0xFA, 0xED, 0xFE]  // Mach-O executable
         ]
         
-        for signature in maliciousSignatures {
-            if data.starts(with: signature) {
-                logError("SECURITY: Malicious file signature detected")
-                return true
-            }
+        for signature in maliciousSignatures where data.starts(with: signature) {
+            logError("SECURITY: Malicious file signature detected")
+            return true
         }
         
         // Check for embedded scripts or executables

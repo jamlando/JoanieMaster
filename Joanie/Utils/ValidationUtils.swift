@@ -238,11 +238,9 @@ class FormValidator: ObservableObject {
     @Published var errors: [String: String] = [:]
     
     func validate(_ field: String, value: String, rules: [ValidationRule]) -> ValidationResult {
-        for rule in rules {
-            if !rule.isValid(value) {
-                errors[field] = rule.errorMessage
-                return ValidationResult.invalid(rule.errorMessage)
-            }
+        for rule in rules where !rule.isValid(value) {
+            errors[field] = rule.errorMessage
+            return ValidationResult.invalid(rule.errorMessage)
         }
         
         errors.removeValue(forKey: field)

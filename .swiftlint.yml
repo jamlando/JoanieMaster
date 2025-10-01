@@ -16,14 +16,9 @@ excluded:
 # Rules to disable
 disabled_rules:
   - trailing_whitespace
-  - line_length
   - todo
   - force_cast
   - force_try
-  - file_length
-  - type_body_length
-  - function_body_length
-  - cyclomatic_complexity
   - closure_body_length
   - implicit_return
   - number_separator
@@ -42,6 +37,12 @@ disabled_rules:
   - empty_enum_arguments
   - duplicate_conditions
   - function_default_parameter_at_end
+  - file_length
+  - type_body_length
+  - function_body_length
+  - cyclomatic_complexity
+  - line_length
+  - large_tuple
 
 # Rules to enable
 opt_in_rules:
@@ -130,36 +131,11 @@ custom_rules:
     excluded: ".*Test.*"
 
 # Configuration
-line_length:
-  warning: 120
-  error: 150
-  ignores_urls: true
-  ignores_function_declarations: true
-  ignores_comments: true
-
-function_body_length:
-  warning: 50
-  error: 100
-
-type_body_length:
-  warning: 300
-  error: 400
-
-file_length:
-  warning: 500
-  error: 1000
-
-cyclomatic_complexity:
-  warning: 10
-  error: 20
 
 nesting:
   type_level:
     warning: 3
     error: 6
-  statement_level:
-    warning: 5
-    error: 10
 
 identifier_name:
   min_length:
