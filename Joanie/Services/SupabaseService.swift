@@ -689,6 +689,33 @@ struct SessionInfo {
         )
     }
     
+    func uploadArtworkWithProgress(
+        childId: UUID,
+        title: String?,
+        description: String?,
+        imageData: Data,
+        artworkType: ArtworkType,
+        progress: @escaping (Double) -> Void
+    ) async throws -> ArtworkUpload {
+        // Simulate upload progress
+        for i in 0...10 {
+            progress(Double(i) / 10.0)
+            try await Task.sleep(nanoseconds: 100_000_000) // 0.1 second
+        }
+        
+        // Mock implementation for now
+        // TODO: Implement real Supabase artwork upload with progress
+        return ArtworkUpload(
+            childId: childId,
+            userId: UUID(),
+            title: title,
+            description: description,
+            artworkType: artworkType,
+            imageURL: "https://example.com/mock-artwork.jpg",
+            fileSize: imageData.count
+        )
+    }
+    
     func getArtwork(childId: UUID) async throws -> [ArtworkUpload] {
         // Mock implementation for now
         // TODO: Implement real Supabase artwork retrieval

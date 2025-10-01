@@ -194,3 +194,4 @@ All authentication flows have been successfully tested and verified to work corr
 
 ---
 *This report was generated automatically as part of Task 2.1.9 - Test authentication flows on device and simulator*
+

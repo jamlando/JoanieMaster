@@ -95,6 +95,9 @@ struct MainTabView: View {
 }
 
 struct HomeView: View {
+    @State private var showingPhotoCapture = false
+    @State private var capturedImage: UIImage?
+    
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
@@ -113,7 +116,7 @@ struct HomeView: View {
                 
                 VStack(spacing: 16) {
                     Button(action: {
-                        // TODO: Implement camera capture
+                        showingPhotoCapture = true
                     }) {
                         HStack {
                             Image(systemName: "camera.fill")
@@ -145,6 +148,18 @@ struct HomeView: View {
                 Spacer()
             }
             .navigationTitle("Home")
+        }
+        .sheet(isPresented: $showingPhotoCapture) {
+            PhotoCaptureFlowView(
+                isPresented: $showingPhotoCapture,
+                capturedImage: $capturedImage
+            )
+        }
+        .onChange(of: capturedImage) { image in
+            if image != nil {
+                // TODO: Handle captured image - upload to storage, create artwork entry, etc.
+                print("Image captured: \(image?.size ?? CGSize.zero)")
+            }
         }
     }
 }

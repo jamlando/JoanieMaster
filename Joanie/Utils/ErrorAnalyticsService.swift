@@ -343,3 +343,4 @@ extension SupabaseService {
         authError.track(context: trackingContext)
     }
 }
+

@@ -534,3 +534,4 @@ extension AuthService {
         ErrorRecoveryFlowManager.shared.startRecoveryFlow(for: error)
     }
 }
+

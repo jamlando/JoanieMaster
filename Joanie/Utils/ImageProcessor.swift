@@ -2,6 +2,9 @@ import Foundation
 import UIKit
 import CoreImage
 import Vision
+import Photos
+import ImageIO
+import CoreLocation
 
 // MARK: - Image Processor
 
@@ -151,6 +154,111 @@ class ImageProcessor: ObservableObject {
         return compressedData
     }
     
+    func compressImageAdvanced(_ image: UIImage, targetSize: Int, maxDimension: CGFloat = 1920) -> Data? {
+        // Step 1: Resize if too large
+        var processedImage = image
+        let maxSize = max(image.size.width, image.size.height)
+        if maxSize > maxDimension {
+            let scale = maxDimension / maxSize
+            let newSize = CGSize(width: image.size.width * scale, height: image.size.height * scale)
+            processedImage = resizeImage(image, to: newSize)
+        }
+        
+        // Step 2: Try different compression strategies
+        let strategies: [CGFloat] = [0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2]
+        
+        for quality in strategies {
+            if let data = processedImage.jpegData(compressionQuality: quality) {
+                if data.count <= targetSize {
+                    return data
+                }
+            }
+        }
+        
+        // Step 3: If still too large, resize further
+        var currentSize = processedImage.size
+        while currentSize.width > 100 && currentSize.height > 100 {
+            currentSize = CGSize(width: currentSize.width * 0.8, height: currentSize.height * 0.8)
+            let resizedImage = resizeImage(processedImage, to: currentSize)
+            
+            if let data = resizedImage.jpegData(compressionQuality: 0.7) {
+                if data.count <= targetSize {
+                    return data
+                }
+            }
+        }
+        
+        // Step 4: Return the smallest we can get
+        return processedImage.jpegData(compressionQuality: 0.1)
+    }
+    
+    func optimizeImageForUpload(_ image: UIImage) -> OptimizedImage? {
+        // Create multiple versions for different use cases
+        let originalData = image.jpegData(compressionQuality: 0.9)
+        let compressedData = compressImageAdvanced(image, targetSize: 2 * 1024 * 1024) // 2MB max
+        let thumbnailData = createThumbnailData(from: image, size: CGSize(width: 300, height: 300))
+        
+        guard let compressed = compressedData,
+              let thumbnail = thumbnailData else {
+            return nil
+        }
+        
+        return OptimizedImage(
+            original: originalData,
+            compressed: compressed,
+            thumbnail: thumbnail,
+            metadata: extractMetadata(from: image)
+        )
+    }
+    
+    func compressImageWithProgress(_ image: UIImage, targetSize: Int, progress: @escaping (Double) -> Void) -> Data? {
+        progress(0.1)
+        
+        // Step 1: Resize if needed
+        var processedImage = image
+        let maxSize = max(image.size.width, image.size.height)
+        if maxSize > 1920 {
+            let scale = 1920 / maxSize
+            let newSize = CGSize(width: image.size.width * scale, height: image.size.height * scale)
+            processedImage = resizeImage(image, to: newSize)
+        }
+        
+        progress(0.3)
+        
+        // Step 2: Try compression
+        let qualities: [CGFloat] = [0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3]
+        
+        for (index, quality) in qualities.enumerated() {
+            if let data = processedImage.jpegData(compressionQuality: quality) {
+                progress(0.3 + (0.4 * Double(index) / Double(qualities.count)))
+                
+                if data.count <= targetSize {
+                    progress(1.0)
+                    return data
+                }
+            }
+        }
+        
+        progress(0.8)
+        
+        // Step 3: Further resize if needed
+        var currentSize = processedImage.size
+        while currentSize.width > 100 && currentSize.height > 100 {
+            currentSize = CGSize(width: currentSize.width * 0.8, height: currentSize.height * 0.8)
+            let resizedImage = resizeImage(processedImage, to: currentSize)
+            
+            if let data = resizedImage.jpegData(compressionQuality: 0.5) {
+                if data.count <= targetSize {
+                    progress(1.0)
+                    return data
+                }
+            }
+        }
+        
+        progress(1.0)
+        return processedImage.jpegData(compressionQuality: 0.1)
+    }
+    
     // MARK: - Thumbnail Creation
     
     func createThumbnail(from image: UIImage, size: CGSize? = nil) -> UIImage? {
@@ -175,6 +283,144 @@ class ImageProcessor: ObservableObject {
             aspectRatio: aspectRatio,
             orientation: image.imageOrientation,
             hasAlpha: image.cgImage?.alphaInfo != CGImageAlphaInfo.none
+        )
+    }
+    
+    func extractDetailedMetadata(from image: UIImage, imageData: Data? = nil) -> DetailedImageMetadata {
+        let basicMetadata = extractMetadata(from: image)
+        
+        // Extract EXIF and other metadata
+        var exifData: [String: Any] = [:]
+        var gpsData: GPSData?
+        var creationDate: Date?
+        var cameraInfo: CameraInfo?
+        
+        if let data = imageData {
+            let metadata = extractMetadataFromData(data)
+            exifData = metadata.exifData
+            gpsData = metadata.gpsData
+            creationDate = metadata.creationDate
+            cameraInfo = metadata.cameraInfo
+        }
+        
+        return DetailedImageMetadata(
+            basic: basicMetadata,
+            exifData: exifData,
+            gpsData: gpsData,
+            creationDate: creationDate,
+            cameraInfo: cameraInfo
+        )
+    }
+    
+    func extractMetadataFromData(_ data: Data) -> (exifData: [String: Any], gpsData: GPSData?, creationDate: Date?, cameraInfo: CameraInfo?) {
+        guard let imageSource = CGImageSourceCreateWithData(data as CFData, nil) else {
+            return ([:], nil, nil, nil)
+        }
+        
+        guard let imageProperties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [String: Any] else {
+            return ([:], nil, nil, nil)
+        }
+        
+        // Extract EXIF data
+        let exifData = imageProperties[kCGImagePropertyExifDictionary as String] as? [String: Any] ?? [:]
+        
+        // Extract GPS data
+        let gpsData = extractGPSData(from: imageProperties)
+        
+        // Extract creation date
+        let creationDate = extractCreationDate(from: imageProperties)
+        
+        // Extract camera info
+        let cameraInfo = extractCameraInfo(from: exifData)
+        
+        return (exifData, gpsData, creationDate, cameraInfo)
+    }
+    
+    private func extractGPSData(from properties: [String: Any]) -> GPSData? {
+        guard let gpsDict = properties[kCGImagePropertyGPSDictionary as String] as? [String: Any] else {
+            return nil
+        }
+        
+        let latitude = gpsDict[kCGImagePropertyGPSLatitude as String] as? Double
+        let longitude = gpsDict[kCGImagePropertyGPSLongitude as String] as? Double
+        let latitudeRef = gpsDict[kCGImagePropertyGPSLatitudeRef as String] as? String
+        let longitudeRef = gpsDict[kCGImagePropertyGPSLongitudeRef as String] as? String
+        
+        guard let lat = latitude, let lon = longitude else { return nil }
+        
+        // Convert to decimal degrees
+        let finalLatitude = (latitudeRef == "S") ? -lat : lat
+        let finalLongitude = (longitudeRef == "W") ? -lon : lon
+        
+        return GPSData(
+            latitude: finalLatitude,
+            longitude: finalLongitude,
+            altitude: gpsDict[kCGImagePropertyGPSAltitude as String] as? Double,
+            timestamp: gpsDict[kCGImagePropertyGPSTimeStamp as String] as? Date
+        )
+    }
+    
+    private func extractCreationDate(from properties: [String: Any]) -> Date? {
+        // Try different date fields
+        if let dateTime = properties[kCGImagePropertyExifDateTimeOriginal as String] as? String {
+            return parseEXIFDate(dateTime)
+        }
+        
+        if let dateTime = properties[kCGImagePropertyExifDateTimeDigitized as String] as? String {
+            return parseEXIFDate(dateTime)
+        }
+        
+        if let dateTime = properties[kCGImagePropertyTIFFDateTime as String] as? String {
+            return parseEXIFDate(dateTime)
+        }
+        
+        return nil
+    }
+    
+    private func parseEXIFDate(_ dateString: String) -> Date? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy:MM:dd HH:mm:ss"
+        return formatter.date(from: dateString)
+    }
+    
+    private func extractCameraInfo(from exifData: [String: Any]) -> CameraInfo? {
+        let make = exifData[kCGImagePropertyExifMake as String] as? String
+        let model = exifData[kCGImagePropertyExifModel as String] as? String
+        let software = exifData[kCGImagePropertyExifSoftware as String] as? String
+        let lensModel = exifData[kCGImagePropertyExifLensModel as String] as? String
+        
+        guard make != nil || model != nil else { return nil }
+        
+        return CameraInfo(
+            make: make,
+            model: model,
+            software: software,
+            lensModel: lensModel
+        )
+    }
+    
+    func extractMetadataFromPHAsset(_ asset: PHAsset) -> DetailedImageMetadata {
+        let basicMetadata = ImageMetadata(
+            width: asset.pixelWidth,
+            height: asset.pixelHeight,
+            aspectRatio: Double(asset.pixelWidth) / Double(asset.pixelHeight),
+            orientation: .up, // PHAsset doesn't store orientation
+            hasAlpha: false // Default assumption
+        )
+        
+        let gpsData = GPSData(
+            latitude: asset.location?.coordinate.latitude,
+            longitude: asset.location?.coordinate.longitude,
+            altitude: asset.location?.altitude,
+            timestamp: asset.location?.timestamp
+        )
+        
+        return DetailedImageMetadata(
+            basic: basicMetadata,
+            exifData: [:], // Would need to load image data to get EXIF
+            gpsData: gpsData,
+            creationDate: asset.creationDate,
+            cameraInfo: nil // Would need to load image data to get camera info
         )
     }
     
@@ -425,6 +671,134 @@ struct Classification {
     
     var displayName: String {
         return identifier.replacingOccurrences(of: "_", with: " ").capitalized
+    }
+}
+
+struct OptimizedImage {
+    let original: Data?
+    let compressed: Data
+    let thumbnail: Data
+    let metadata: ImageMetadata
+    
+    var originalSize: Int {
+        return original?.count ?? 0
+    }
+    
+    var compressedSize: Int {
+        return compressed.count
+    }
+    
+    var thumbnailSize: Int {
+        return thumbnail.count
+    }
+    
+    var compressionRatio: Double {
+        guard originalSize > 0 else { return 0 }
+        return Double(compressedSize) / Double(originalSize)
+    }
+    
+    var sizeReduction: Double {
+        guard originalSize > 0 else { return 0 }
+        return 1.0 - compressionRatio
+    }
+    
+    var sizeReductionPercentage: Int {
+        return Int(sizeReduction * 100)
+    }
+}
+
+struct DetailedImageMetadata {
+    let basic: ImageMetadata
+    let exifData: [String: Any]
+    let gpsData: GPSData?
+    let creationDate: Date?
+    let cameraInfo: CameraInfo?
+    
+    var hasLocation: Bool {
+        return gpsData != nil
+    }
+    
+    var hasCreationDate: Bool {
+        return creationDate != nil
+    }
+    
+    var hasCameraInfo: Bool {
+        return cameraInfo != nil
+    }
+    
+    var locationDescription: String? {
+        guard let gps = gpsData else { return nil }
+        return String(format: "%.6f, %.6f", gps.latitude, gps.longitude)
+    }
+    
+    var formattedCreationDate: String? {
+        guard let date = creationDate else { return nil }
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
+    }
+    
+    var cameraDescription: String? {
+        guard let camera = cameraInfo else { return nil }
+        var components: [String] = []
+        
+        if let make = camera.make {
+            components.append(make)
+        }
+        
+        if let model = camera.model {
+            components.append(model)
+        }
+        
+        return components.isEmpty ? nil : components.joined(separator: " ")
+    }
+}
+
+struct GPSData {
+    let latitude: Double
+    let longitude: Double
+    let altitude: Double?
+    let timestamp: Date?
+    
+    var coordinate: CLLocationCoordinate2D {
+        return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
+    
+    var location: CLLocation? {
+        guard let altitude = altitude else { return nil }
+        return CLLocation(
+            coordinate: coordinate,
+            altitude: altitude,
+            horizontalAccuracy: 0,
+            verticalAccuracy: 0,
+            timestamp: timestamp ?? Date()
+        )
+    }
+}
+
+struct CameraInfo {
+    let make: String?
+    let model: String?
+    let software: String?
+    let lensModel: String?
+    
+    var fullDescription: String {
+        var components: [String] = []
+        
+        if let make = make {
+            components.append(make)
+        }
+        
+        if let model = model {
+            components.append(model)
+        }
+        
+        if let lens = lensModel {
+            components.append(lens)
+        }
+        
+        return components.joined(separator: " ")
     }
 }
 

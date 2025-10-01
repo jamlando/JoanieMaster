@@ -3,22 +3,35 @@ import Foundation
 import Combine
 import UIKit
 
+// MARK: - Network Connectivity Notification
+
+extension Notification.Name {
+    static let networkConnectivityChanged = Notification.Name("networkConnectivityChanged")
+}
+
 @MainActor
 class StorageService: ObservableObject, ServiceProtocol {
     // MARK: - Published Properties
     @Published var isUploading: Bool = false
     @Published var uploadProgress: Double = 0.0
     @Published var errorMessage: String?
+    @Published var currentUpload: UploadTask?
+    @Published var uploadQueue: [UploadTask] = []
+    @Published var completedUploads: [UploadTask] = []
+    @Published var failedUploads: [UploadTask] = []
     
     // MARK: - Dependencies
     private let supabaseService: SupabaseService
+    private let imageProcessor: ImageProcessor
     private var cancellables = Set<AnyCancellable>()
     
     // MARK: - Initialization
     
     init(supabaseService: SupabaseService) {
         self.supabaseService = supabaseService
+        self.imageProcessor = ImageProcessor()
         setupBindings()
+        setupNetworkMonitoring()
     }
     
     // MARK: - Setup
@@ -41,34 +54,164 @@ class StorageService: ObservableObject, ServiceProtocol {
     // MARK: - Public Methods
     
     func uploadArtwork(
-        _ imageData: Data,
+        _ image: UIImage,
         for childId: UUID,
         title: String? = nil,
         description: String? = nil,
         artworkType: ArtworkType
     ) async throws -> ArtworkUpload {
+        // Create upload task
+        let uploadTask = UploadTask(
+            id: UUID(),
+            childId: childId,
+            title: title,
+            description: description,
+            artworkType: artworkType,
+            image: image,
+            status: .preparing
+        )
+        
+        currentUpload = uploadTask
         isUploading = true
         uploadProgress = 0.0
         errorMessage = nil
         
         do {
+            // Step 1: Process image
+            uploadTask.status = .processing
+            uploadProgress = 0.1
+            
+            let optimizedImage = try await processImageForUpload(image)
+            uploadProgress = 0.3
+            
+            // Step 2: Upload to storage
+            uploadTask.status = .uploading
             let artwork = try await supabaseService.uploadArtwork(
                 childId: childId,
                 title: title,
                 description: description,
-                imageData: imageData,
+                imageData: optimizedImage.compressed,
                 artworkType: artworkType
             )
             
-            isUploading = false
+            // Step 3: Complete
+            uploadTask.status = .completed
+            uploadTask.artwork = artwork
             uploadProgress = 1.0
+            
+            isUploading = false
+            completedUploads.append(uploadTask)
+            currentUpload = nil
+            
             return artwork
             
         } catch {
-            isUploading = false
+            uploadTask.status = .failed
+            uploadTask.error = error
             uploadProgress = 0.0
             errorMessage = error.localizedDescription
+            
+            isUploading = false
+            failedUploads.append(uploadTask)
+            currentUpload = nil
+            
             throw error
+        }
+    }
+    
+    func uploadArtworkWithProgress(
+        _ image: UIImage,
+        for childId: UUID,
+        title: String? = nil,
+        description: String? = nil,
+        artworkType: ArtworkType,
+        progress: @escaping (Double) -> Void
+    ) async throws -> ArtworkUpload {
+        // Create upload task
+        let uploadTask = UploadTask(
+            id: UUID(),
+            childId: childId,
+            title: title,
+            description: description,
+            artworkType: artworkType,
+            image: image,
+            status: .preparing
+        )
+        
+        currentUpload = uploadTask
+        isUploading = true
+        errorMessage = nil
+        
+        do {
+            // Step 1: Process image with progress
+            uploadTask.status = .processing
+            progress(0.1)
+            
+            let optimizedImage = try await processImageForUploadWithProgress(image) { processingProgress in
+                progress(0.1 + (processingProgress * 0.2))
+            }
+            progress(0.3)
+            
+            // Step 2: Upload to storage with progress
+            uploadTask.status = .uploading
+            let artwork = try await supabaseService.uploadArtworkWithProgress(
+                childId: childId,
+                title: title,
+                description: description,
+                imageData: optimizedImage.compressed,
+                artworkType: artworkType
+            ) { uploadProgress in
+                progress(0.3 + (uploadProgress * 0.7))
+            }
+            
+            // Step 3: Complete
+            uploadTask.status = .completed
+            uploadTask.artwork = artwork
+            progress(1.0)
+            
+            isUploading = false
+            completedUploads.append(uploadTask)
+            currentUpload = nil
+            
+            return artwork
+            
+        } catch {
+            uploadTask.status = .failed
+            uploadTask.error = error
+            errorMessage = error.localizedDescription
+            
+            isUploading = false
+            failedUploads.append(uploadTask)
+            currentUpload = nil
+            
+            throw error
+        }
+    }
+    
+    private func processImageForUpload(_ image: UIImage) async throws -> OptimizedImage {
+        return try await withCheckedThrowingContinuation { continuation in
+            imageProcessor.processImage(image) { processedImage in
+                if let optimized = imageProcessor.optimizeImageForUpload(processedImage.processedImage) {
+                    continuation.resume(returning: optimized)
+                } else {
+                    continuation.resume(throwing: ImageProcessingError.compressionFailed)
+                }
+            }
+        }
+    }
+    
+    private func processImageForUploadWithProgress(_ image: UIImage, progress: @escaping (Double) -> Void) async throws -> OptimizedImage {
+        return try await withCheckedThrowingContinuation { continuation in
+            imageProcessor.processImage(image) { processedImage in
+                progress(0.5)
+                
+                if let optimized = imageProcessor.optimizeImageForUpload(processedImage.processedImage) {
+                    progress(1.0)
+                    continuation.resume(returning: optimized)
+                } else {
+                    continuation.resume(throwing: ImageProcessingError.compressionFailed)
+                }
+            }
         }
     }
     
@@ -199,21 +342,163 @@ class StorageService: ObservableObject, ServiceProtocol {
     
     func queueUpload(_ upload: QueuedUpload) async {
         // Add to offline queue
-        // await supabaseService.queueOfflineUpload(upload) // TODO: Implement offline upload queue
+        uploadQueue.append(QueuedUpload(
+            childId: upload.childId,
+            title: upload.title,
+            description: upload.description,
+            artworkType: upload.artworkType,
+            imageData: upload.imageData
+        ))
+        
+        // Save to persistent storage
+        await saveOfflineQueue()
     }
     
     func processOfflineQueue() async {
-        // Process queued uploads when online
-        // await supabaseService.processOfflineQueue() // TODO: Implement offline queue processing
+        guard !uploadQueue.isEmpty else { return }
+        
+        let queueCopy = uploadQueue
+        uploadQueue.removeAll()
+        
+        for queuedUpload in queueCopy {
+            do {
+                // Convert QueuedUpload to UploadTask
+                guard let image = UIImage(data: queuedUpload.imageData) else { continue }
+                
+                let uploadTask = UploadTask(
+                    childId: queuedUpload.childId,
+                    title: queuedUpload.title,
+                    description: queuedUpload.description,
+                    artworkType: queuedUpload.artworkType,
+                    image: image,
+                    status: .queued
+                )
+                
+                // Attempt upload
+                uploadTask.status = .uploading
+                let artwork = try await supabaseService.uploadArtwork(
+                    childId: queuedUpload.childId,
+                    title: queuedUpload.title,
+                    description: queuedUpload.description,
+                    imageData: queuedUpload.imageData,
+                    artworkType: queuedUpload.artworkType
+                )
+                
+                uploadTask.status = .completed
+                uploadTask.artwork = artwork
+                completedUploads.append(uploadTask)
+                
+            } catch {
+                // Re-queue failed upload
+                uploadQueue.append(queuedUpload)
+                
+                let uploadTask = UploadTask(
+                    childId: queuedUpload.childId,
+                    title: queuedUpload.title,
+                    description: queuedUpload.description,
+                    artworkType: queuedUpload.artworkType,
+                    image: UIImage(data: queuedUpload.imageData) ?? UIImage(),
+                    status: .failed
+                )
+                uploadTask.error = error
+                failedUploads.append(uploadTask)
+            }
+        }
+        
+        // Save updated queue
+        await saveOfflineQueue()
     }
     
     func getOfflineQueue() async -> [QueuedUpload] {
-        // return await supabaseService.getOfflineQueue() // TODO: Implement offline queue retrieval
-        return []
+        return uploadQueue
     }
     
     func clearOfflineQueue() async {
-        // await supabaseService.clearOfflineQueue() // TODO: Implement offline queue clearing
+        uploadQueue.removeAll()
+        await saveOfflineQueue()
+    }
+    
+    func retryFailedUpload(_ uploadTask: UploadTask) async {
+        guard let index = failedUploads.firstIndex(where: { $0.id == uploadTask.id }) else { return }
+        
+        failedUploads.remove(at: index)
+        uploadTask.status = .retrying
+        
+        do {
+            let artwork = try await supabaseService.uploadArtwork(
+                childId: uploadTask.childId,
+                title: uploadTask.title,
+                description: uploadTask.description,
+                imageData: uploadTask.image.jpegData(compressionQuality: 0.8) ?? Data(),
+                artworkType: uploadTask.artworkType
+            )
+            
+            uploadTask.status = .completed
+            uploadTask.artwork = artwork
+            completedUploads.append(uploadTask)
+            
+        } catch {
+            uploadTask.status = .failed
+            uploadTask.error = error
+            failedUploads.append(uploadTask)
+        }
+    }
+    
+    func removeFailedUpload(_ uploadTask: UploadTask) {
+        failedUploads.removeAll { $0.id == uploadTask.id }
+    }
+    
+    private func saveOfflineQueue() async {
+        // Save to UserDefaults for persistence
+        let encoder = JSONEncoder()
+        if let data = try? encoder.encode(uploadQueue) {
+            UserDefaults.standard.set(data, forKey: "offline_upload_queue")
+        }
+    }
+    
+    private func loadOfflineQueue() async {
+        // Load from UserDefaults
+        guard let data = UserDefaults.standard.data(forKey: "offline_upload_queue") else { return }
+        
+        let decoder = JSONDecoder()
+        if let queue = try? decoder.decode([QueuedUpload].self, from: data) {
+            uploadQueue = queue
+        }
+    }
+    
+    private func setupNetworkMonitoring() {
+        // Monitor network connectivity changes
+        NotificationCenter.default.addObserver(
+            forName: .networkConnectivityChanged,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                await self?.handleNetworkConnectivityChange()
+            }
+        }
+        
+        // Load offline queue on initialization
+        Task {
+            await loadOfflineQueue()
+        }
+    }
+    
+    private func handleNetworkConnectivityChange() async {
+        // Check if we're online and have queued uploads
+        if isNetworkAvailable() && !uploadQueue.isEmpty {
+            await processOfflineQueue()
+        }
+    }
+    
+    private func isNetworkAvailable() -> Bool {
+        // Simple network availability check
+        // In a real implementation, you'd use Network framework or similar
+        return true // Mock implementation
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     // MARK: - ServiceProtocol
@@ -241,6 +526,75 @@ class StorageService: ObservableObject, ServiceProtocol {
     var uploadProgressPercentage: Int {
         return Int(uploadProgress * 100)
     }
+}
+
+// MARK: - Upload Task
+
+class UploadTask: ObservableObject, Identifiable {
+    let id: UUID
+    let childId: UUID
+    let title: String?
+    let description: String?
+    let artworkType: ArtworkType
+    let image: UIImage
+    let createdAt: Date
+    
+    @Published var status: UploadStatus
+    @Published var progress: Double = 0.0
+    @Published var error: Error?
+    @Published var artwork: ArtworkUpload?
+    
+    init(id: UUID = UUID(), childId: UUID, title: String? = nil, description: String? = nil, artworkType: ArtworkType, image: UIImage, status: UploadStatus = .preparing) {
+        self.id = id
+        self.childId = childId
+        self.title = title
+        self.description = description
+        self.artworkType = artworkType
+        self.image = image
+        self.status = status
+        self.createdAt = Date()
+    }
+    
+    var isCompleted: Bool {
+        return status == .completed
+    }
+    
+    var isFailed: Bool {
+        return status == .failed
+    }
+    
+    var isInProgress: Bool {
+        return status == .preparing || status == .processing || status == .uploading
+    }
+    
+    var statusDescription: String {
+        switch status {
+        case .preparing:
+            return "Preparing..."
+        case .processing:
+            return "Processing image..."
+        case .uploading:
+            return "Uploading..."
+        case .completed:
+            return "Completed"
+        case .failed:
+            return "Failed"
+        case .queued:
+            return "Queued"
+        case .retrying:
+            return "Retrying..."
+        }
+    }
+}
+
+enum UploadStatus: String, CaseIterable {
+    case preparing = "preparing"
+    case processing = "processing"
+    case uploading = "uploading"
+    case completed = "completed"
+    case failed = "failed"
+    case queued = "queued"
+    case retrying = "retrying"
 }
 
 // MARK: - Queued Upload
