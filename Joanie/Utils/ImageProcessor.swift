@@ -312,13 +312,13 @@ class ImageProcessor: ObservableObject {
         )
     }
     
-    func extractMetadataFromData(_ data: Data) -> (exifData: [String: Any], gpsData: GPSData?, creationDate: Date?, cameraInfo: CameraInfo?) {
+    func extractMetadataFromData(_ data: Data) -> (exifData: [String: Any], gpsData: GPSData?) {
         guard let imageSource = CGImageSourceCreateWithData(data as CFData, nil) else {
-            return ([:], nil, nil, nil)
+            return ([:], nil)
         }
         
         guard let imageProperties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [String: Any] else {
-            return ([:], nil, nil, nil)
+            return ([:], nil)
         }
         
         // Extract EXIF data
@@ -333,7 +333,7 @@ class ImageProcessor: ObservableObject {
         // Extract camera info
         let cameraInfo = extractCameraInfo(from: exifData)
         
-        return (exifData, gpsData, creationDate, cameraInfo)
+        return (exifData, gpsData)
     }
     
     private func extractGPSData(from properties: [String: Any]) -> GPSData? {

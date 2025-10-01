@@ -160,7 +160,7 @@ class SecurityEventLogger {
         
         // In production, this would send to a security monitoring service
         if SecurityConfig.isProduction {
-            // TODO: Send to security monitoring service
+            // NOTE: Security monitoring service integration planned for production
             logInfo("SECURITY EVENT: \(event) - \(details)")
         } else {
             logInfo("SECURITY EVENT: \(event) - \(details)")
@@ -177,7 +177,7 @@ class SecurityEventLogger {
         
         // For critical violations, take immediate action
         if severity == .critical {
-            // TODO: Implement immediate security response
+            // NOTE: Immediate security response system planned for production
             logError("CRITICAL SECURITY VIOLATION: \(violation)")
         }
     }

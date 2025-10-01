@@ -395,7 +395,7 @@ class UploadTestSuite: ObservableObject {
             
             let duration = Date().timeIntervalSince(startTime)
             
-            if progressUpdates.count > 0 {
+            if !progressUpdates.isEmpty {
                 return TestResult(
                     name: testName,
                     status: .passed,
