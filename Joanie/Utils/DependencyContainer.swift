@@ -29,12 +29,12 @@ class DependencyContainer: ObservableObject {
     
     private init() {
         // Initialize services
-        self.supabaseService = SupabaseService()
+        self.supabaseService = SupabaseService.shared
         self.authService = AuthService(supabaseService: supabaseService)
         self.storageService = StorageService(supabaseService: supabaseService)
         self.aiService = AIService()
         self.imageProcessor = ImageProcessor()
-        self.logger = Logger()
+        self.logger = Logger.shared
         
         // Initialize app state
         self.appState = AppState()
@@ -68,9 +68,9 @@ class DependencyContainer: ObservableObject {
     
     private func setupServiceDependencies() {
         // Configure services with their dependencies
-        authService.configure(with: supabaseService)
-        storageService.configure(with: supabaseService)
-        aiService.configure(with: supabaseService)
+        // authService.configure(with: supabaseService) // TODO: Implement service configuration
+        // storageService.configure(with: supabaseService) // TODO: Implement service configuration
+        // aiService.configure(with: supabaseService) // TODO: Implement service configuration
     }
     
     // MARK: - Public Methods
@@ -80,7 +80,7 @@ class DependencyContainer: ObservableObject {
         appState.logout()
         
         // Reset services
-        supabaseService.reset()
+        // supabaseService.reset() // TODO: Implement service reset
         authService.reset()
         storageService.reset()
         aiService.reset()
@@ -109,7 +109,7 @@ class DependencyContainer: ObservableObject {
     
     func configureForTesting() {
         // Configure services for testing environment
-        supabaseService.configureForTesting()
+        // supabaseService.configureForTesting() // TODO: Implement testing configuration
         authService.configureForTesting()
         storageService.configureForTesting()
         aiService.configureForTesting()
@@ -149,7 +149,7 @@ extension DependencyContainer {
     
     // MARK: - ViewModel Injection
     
-    func inject<T>(_ viewModelType: T.Type) -> T? {
+    func injectViewModel<T>(_ viewModelType: T.Type) -> T? {
         switch viewModelType {
         case is HomeViewModel.Type:
             return homeViewModel as? T
@@ -165,41 +165,41 @@ extension DependencyContainer {
     }
 }
 
-// MARK: - Environment Key
+// MARK: - Environment Key (TODO: Implement SwiftUI environment integration)
 
-struct DependencyContainerKey: EnvironmentKey {
-    static let defaultValue = DependencyContainer.shared
-}
-
-extension EnvironmentValues {
-    var dependencies: DependencyContainer {
-        get { self[DependencyContainerKey.self] }
-        set { self[DependencyContainerKey.self] = newValue }
-    }
-}
-
-// MARK: - View Extension
-
-extension View {
-    func withDependencies(_ container: DependencyContainer = .shared) -> some View {
-        self.environment(\.dependencies, container)
-    }
-}
-
-// MARK: - Property Wrapper
-
-@propertyWrapper
-struct Injected<T> {
-    private let keyPath: KeyPath<DependencyContainer, T>
-    
-    init(_ keyPath: KeyPath<DependencyContainer, T>) {
-        self.keyPath = keyPath
-    }
-    
-    var wrappedValue: T {
-        DependencyContainer.shared[keyPath: keyPath]
-    }
-}
+// struct DependencyContainerKey: EnvironmentKey {
+//     static let defaultValue = DependencyContainer.shared
+// }
+//
+// extension EnvironmentValues {
+//     var dependencies: DependencyContainer {
+//         get { self[DependencyContainerKey.self] }
+//         set { self[DependencyContainerKey.self] = newValue }
+//     }
+// }
+//
+// // MARK: - View Extension
+//
+// extension View {
+//     func withDependencies(_ container: DependencyContainer = .shared) -> some View {
+//         self.environment(\.dependencies, container)
+//     }
+// }
+//
+// // MARK: - Property Wrapper
+//
+// @propertyWrapper
+// struct Injected<T> {
+//     private let keyPath: KeyPath<DependencyContainer, T>
+//     
+//     init(_ keyPath: KeyPath<DependencyContainer, T>) {
+//         self.keyPath = keyPath
+//     }
+//     
+//     var wrappedValue: T {
+//         DependencyContainer.shared[keyPath: keyPath]
+//     }
+// }
 
 // MARK: - Usage Examples
 

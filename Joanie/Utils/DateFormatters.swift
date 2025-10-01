@@ -248,7 +248,7 @@ extension Date {
 
 // MARK: - Date Range
 
-struct DateRange {
+struct DateRangeStruct {
     let start: Date
     let end: Date
     
@@ -285,45 +285,45 @@ struct DateRange {
 
 // MARK: - Date Range Extensions
 
-extension DateRange {
-    static func today() -> DateRange {
-        return DateRange(start: Date().startOfDay, end: Date().endOfDay)
+extension DateRangeStruct {
+    static func today() -> DateRangeStruct {
+        return DateRangeStruct(start: Date().startOfDay, end: Date().endOfDay)
     }
     
-    static func yesterday() -> DateRange {
+    static func yesterday() -> DateRangeStruct {
         let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
-        return DateRange(start: yesterday.startOfDay, end: yesterday.endOfDay)
+        return DateRangeStruct(start: yesterday.startOfDay, end: yesterday.endOfDay)
     }
     
-    static func thisWeek() -> DateRange {
-        return DateRange(start: Date().startOfWeek, end: Date().endOfWeek)
+    static func thisWeek() -> DateRangeStruct {
+        return DateRangeStruct(start: Date().startOfWeek, end: Date().endOfWeek)
     }
     
-    static func lastWeek() -> DateRange {
+    static func lastWeek() -> DateRangeStruct {
         let lastWeek = Calendar.current.date(byAdding: .weekOfYear, value: -1, to: Date()) ?? Date()
-        return DateRange(start: lastWeek.startOfWeek, end: lastWeek.endOfWeek)
+        return DateRangeStruct(start: lastWeek.startOfWeek, end: lastWeek.endOfWeek)
     }
     
-    static func thisMonth() -> DateRange {
-        return DateRange(start: Date().startOfMonth, end: Date().endOfMonth)
+    static func thisMonth() -> DateRangeStruct {
+        return DateRangeStruct(start: Date().startOfMonth, end: Date().endOfMonth)
     }
     
-    static func lastMonth() -> DateRange {
+    static func lastMonth() -> DateRangeStruct {
         let lastMonth = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
-        return DateRange(start: lastMonth.startOfMonth, end: lastMonth.endOfMonth)
+        return DateRangeStruct(start: lastMonth.startOfMonth, end: lastMonth.endOfMonth)
     }
     
-    static func thisYear() -> DateRange {
-        return DateRange(start: Date().startOfYear, end: Date().endOfYear)
+    static func thisYear() -> DateRangeStruct {
+        return DateRangeStruct(start: Date().startOfYear, end: Date().endOfYear)
     }
     
-    static func lastYear() -> DateRange {
+    static func lastYear() -> DateRangeStruct {
         let lastYear = Calendar.current.date(byAdding: .year, value: -1, to: Date()) ?? Date()
-        return DateRange(start: lastYear.startOfYear, end: lastYear.endOfYear)
+        return DateRangeStruct(start: lastYear.startOfYear, end: lastYear.endOfYear)
     }
     
-    static func custom(start: Date, end: Date) -> DateRange {
-        return DateRange(start: start, end: end)
+    static func custom(start: Date, end: Date) -> DateRangeStruct {
+        return DateRangeStruct(start: start, end: end)
     }
 }
 

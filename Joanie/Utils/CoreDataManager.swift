@@ -24,7 +24,7 @@ class CoreDataManager: ObservableObject {
         
         container.loadPersistentStores { _, error in
             if let error = error {
-                Logger.error("Core Data error: \(error.localizedDescription)")
+                logError("Core Data error: \(error.localizedDescription)")
             }
         }
         
@@ -70,9 +70,9 @@ class CoreDataManager: ObservableObject {
         if context.hasChanges {
             do {
                 try context.save()
-                Logger.info("Core Data context saved successfully")
+                logInfo("Core Data context saved successfully")
             } catch {
-                Logger.error("Core Data save error: \(error.localizedDescription)")
+                logError("Core Data save error: \(error.localizedDescription)")
             }
         }
     }
@@ -89,18 +89,18 @@ class CoreDataManager: ObservableObject {
     
     func enableOfflineMode() {
         isOfflineMode = true
-        Logger.info("Offline mode enabled")
+        logInfo("Offline mode enabled")
     }
     
     func disableOfflineMode() {
         isOfflineMode = false
-        Logger.info("Offline mode disabled")
+        logInfo("Offline mode disabled")
     }
     
     func syncPendingChanges() async {
         guard !isOfflineMode else { return }
         
-        Logger.info("Starting sync of pending changes")
+        logInfo("Starting sync of pending changes")
         
         do {
             // Sync artwork
@@ -115,9 +115,9 @@ class CoreDataManager: ObservableObject {
             // Sync progress entries
             await syncPendingProgress()
             
-            Logger.info("Sync completed successfully")
+            logInfo("Sync completed successfully")
         } catch {
-            Logger.error("Sync failed: \(error.localizedDescription)")
+            logError("Sync failed: \(error.localizedDescription)")
         }
     }
     
@@ -125,12 +125,12 @@ class CoreDataManager: ObservableObject {
     
     private func handleContextDidSave(_ notification: Notification) {
         // Handle local context saves
-        Logger.info("Core Data context did save")
+        logInfo("Core Data context did save")
     }
     
     private func handleRemoteChange(_ notification: Notification) {
         // Handle remote changes from other devices
-        Logger.info("Core Data remote change detected")
+        logInfo("Core Data remote change detected")
         
         Task {
             await syncPendingChanges()
@@ -140,7 +140,7 @@ class CoreDataManager: ObservableObject {
     private func syncPendingArtwork() async {
         // Sync pending artwork changes
         let context = persistentContainer.viewContext
-        let request: NSFetchRequest<ArtworkEntity> = ArtworkEntity.fetchRequest()
+        let request: NSFetchRequest<ArtworkEntity> = ArtworkEntity.fetchRequest() as! NSFetchRequest<ArtworkEntity>
         request.predicate = NSPredicate(format: "needsSync == YES")
         
         do {
@@ -150,14 +150,14 @@ class CoreDataManager: ObservableObject {
                 await syncArtworkEntity(artwork)
             }
         } catch {
-            Logger.error("Failed to fetch pending artwork: \(error.localizedDescription)")
+            logError("Failed to fetch pending artwork: \(error.localizedDescription)")
         }
     }
     
     private func syncPendingChildren() async {
         // Sync pending children changes
         let context = persistentContainer.viewContext
-        let request: NSFetchRequest<ChildEntity> = ChildEntity.fetchRequest()
+        let request: NSFetchRequest<ChildEntity> = ChildEntity.fetchRequest() as! NSFetchRequest<ChildEntity>
         request.predicate = NSPredicate(format: "needsSync == YES")
         
         do {
@@ -167,14 +167,14 @@ class CoreDataManager: ObservableObject {
                 await syncChildEntity(child)
             }
         } catch {
-            Logger.error("Failed to fetch pending children: \(error.localizedDescription)")
+            logError("Failed to fetch pending children: \(error.localizedDescription)")
         }
     }
     
     private func syncPendingStories() async {
         // Sync pending stories changes
         let context = persistentContainer.viewContext
-        let request: NSFetchRequest<StoryEntity> = StoryEntity.fetchRequest()
+        let request: NSFetchRequest<StoryEntity> = StoryEntity.fetchRequest() as! NSFetchRequest<StoryEntity>
         request.predicate = NSPredicate(format: "needsSync == YES")
         
         do {
@@ -184,14 +184,14 @@ class CoreDataManager: ObservableObject {
                 await syncStoryEntity(story)
             }
         } catch {
-            Logger.error("Failed to fetch pending stories: \(error.localizedDescription)")
+            logError("Failed to fetch pending stories: \(error.localizedDescription)")
         }
     }
     
     private func syncPendingProgress() async {
         // Sync pending progress changes
         let context = persistentContainer.viewContext
-        let request: NSFetchRequest<ProgressEntity> = ProgressEntity.fetchRequest()
+        let request: NSFetchRequest<ProgressEntity> = ProgressEntity.fetchRequest() as! NSFetchRequest<ProgressEntity>
         request.predicate = NSPredicate(format: "needsSync == YES")
         
         do {
@@ -201,28 +201,28 @@ class CoreDataManager: ObservableObject {
                 await syncProgressEntity(progress)
             }
         } catch {
-            Logger.error("Failed to fetch pending progress: \(error.localizedDescription)")
+            logError("Failed to fetch pending progress: \(error.localizedDescription)")
         }
     }
     
     private func syncArtworkEntity(_ entity: ArtworkEntity) async {
         // Implement artwork sync logic
-        Logger.info("Syncing artwork entity: \(entity.id?.uuidString ?? "unknown")")
+        logInfo("Syncing artwork entity: \(entity.id?.uuidString ?? "unknown")")
     }
     
     private func syncChildEntity(_ entity: ChildEntity) async {
         // Implement child sync logic
-        Logger.info("Syncing child entity: \(entity.id?.uuidString ?? "unknown")")
+        logInfo("Syncing child entity: \(entity.id?.uuidString ?? "unknown")")
     }
     
     private func syncStoryEntity(_ entity: StoryEntity) async {
         // Implement story sync logic
-        Logger.info("Syncing story entity: \(entity.id?.uuidString ?? "unknown")")
+        logInfo("Syncing story entity: \(entity.id?.uuidString ?? "unknown")")
     }
     
     private func syncProgressEntity(_ entity: ProgressEntity) async {
         // Implement progress sync logic
-        Logger.info("Syncing progress entity: \(entity.id?.uuidString ?? "unknown")")
+        logInfo("Syncing progress entity: \(entity.id?.uuidString ?? "unknown")")
     }
     
     // MARK: - Helper Methods
@@ -230,16 +230,16 @@ class CoreDataManager: ObservableObject {
     func getPendingSyncCount() -> Int {
         let context = persistentContainer.viewContext
         
-        let artworkRequest: NSFetchRequest<ArtworkEntity> = ArtworkEntity.fetchRequest()
+        let artworkRequest: NSFetchRequest<ArtworkEntity> = ArtworkEntity.fetchRequest() as! NSFetchRequest<ArtworkEntity>
         artworkRequest.predicate = NSPredicate(format: "needsSync == YES")
         
-        let childRequest: NSFetchRequest<ChildEntity> = ChildEntity.fetchRequest()
+        let childRequest: NSFetchRequest<ChildEntity> = ChildEntity.fetchRequest() as! NSFetchRequest<ChildEntity>
         childRequest.predicate = NSPredicate(format: "needsSync == YES")
         
-        let storyRequest: NSFetchRequest<StoryEntity> = StoryEntity.fetchRequest()
+        let storyRequest: NSFetchRequest<StoryEntity> = StoryEntity.fetchRequest() as! NSFetchRequest<StoryEntity>
         storyRequest.predicate = NSPredicate(format: "needsSync == YES")
         
-        let progressRequest: NSFetchRequest<ProgressEntity> = ProgressEntity.fetchRequest()
+        let progressRequest: NSFetchRequest<ProgressEntity> = ProgressEntity.fetchRequest() as! NSFetchRequest<ProgressEntity>
         progressRequest.predicate = NSPredicate(format: "needsSync == YES")
         
         do {
@@ -250,7 +250,7 @@ class CoreDataManager: ObservableObject {
             
             return artworkCount + childCount + storyCount + progressCount
         } catch {
-            Logger.error("Failed to count pending sync items: \(error.localizedDescription)")
+            logError("Failed to count pending sync items: \(error.localizedDescription)")
             return 0
         }
     }
@@ -268,7 +268,7 @@ extension NSManagedObjectContext {
             do {
                 try save()
             } catch {
-                Logger.error("Failed to save context: \(error.localizedDescription)")
+                logError("Failed to save context: \(error.localizedDescription)")
             }
         }
     }

@@ -240,23 +240,23 @@ extension DateFormatter {
 
 // MARK: - Global Logger Functions
 
-func Logger.info(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
+func logInfo(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
     Logger.shared.info(message, file: file, function: function, line: line)
 }
 
-func Logger.debug(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
+func logDebug(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
     Logger.shared.debug(message, file: file, function: function, line: line)
 }
 
-func Logger.warning(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
+func logWarning(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
     Logger.shared.warning(message, file: file, function: function, line: line)
 }
 
-func Logger.error(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
+func logError(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
     Logger.shared.error(message, file: file, function: function, line: line)
 }
 
-func Logger.critical(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
+func logCritical(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
     Logger.shared.critical(message, file: file, function: function, line: line)
 }
 
@@ -278,7 +278,7 @@ class DebugTools: ObservableObject {
     
     func toggleDebugMode() {
         isDebugMode.toggle()
-        Config.isDebugMode = isDebugMode
+        // Config.isDebugMode = isDebugMode // TODO: Make Config.isDebugMode mutable
     }
     
     func refreshLogs() {
@@ -305,7 +305,7 @@ class DebugTools: ObservableObject {
         let result = try operation()
         let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
         
-        Logger.info("\(label) took \(String(format: "%.3f", timeElapsed)) seconds")
+        logInfo("\(label) took \(String(format: "%.3f", timeElapsed)) seconds")
         return result
     }
     
@@ -314,7 +314,7 @@ class DebugTools: ObservableObject {
         let result = try await operation()
         let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
         
-        Logger.info("\(label) took \(String(format: "%.3f", timeElapsed)) seconds")
+        logInfo("\(label) took \(String(format: "%.3f", timeElapsed)) seconds")
         return result
     }
     
@@ -346,30 +346,30 @@ class DebugTools: ObservableObject {
     // MARK: - Network Monitoring
     
     func logNetworkRequest(_ request: URLRequest) {
-        Logger.info("🌐 Network Request: \(request.httpMethod ?? "GET") \(request.url?.absoluteString ?? "unknown")")
+        logInfo("🌐 Network Request: \(request.httpMethod ?? "GET") \(request.url?.absoluteString ?? "unknown")")
         
         if let headers = request.allHTTPHeaderFields {
             for (key, value) in headers {
-                Logger.debug("Header: \(key): \(value)")
+                logError("Header: \(key): \(value)")
             }
         }
         
         if let body = request.httpBody {
-            Logger.debug("Body size: \(body.count) bytes")
+            logError("Body size: \(body.count) bytes")
         }
     }
     
     func logNetworkResponse(_ response: URLResponse, data: Data?) {
         if let httpResponse = response as? HTTPURLResponse {
-            Logger.info("🌐 Network Response: \(httpResponse.statusCode) \(httpResponse.url?.absoluteString ?? "unknown")")
+            logInfo("🌐 Network Response: \(httpResponse.statusCode) \(httpResponse.url?.absoluteString ?? "unknown")")
             
             for (key, value) in httpResponse.allHeaderFields {
-                Logger.debug("Response Header: \(key): \(value)")
+                logError("Response Header: \(key): \(value)")
             }
         }
         
         if let data = data {
-            Logger.debug("Response data size: \(data.count) bytes")
+            logError("Response data size: \(data.count) bytes")
         }
     }
 }
@@ -406,12 +406,12 @@ class PerformanceTimer {
     init(label: String) {
         self.startTime = CFAbsoluteTimeGetCurrent()
         self.label = label
-        Logger.debug("⏱️ Starting timer: \(label)")
+        logError("⏱️ Starting timer: \(label)")
     }
     
     deinit {
         let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
-        Logger.debug("⏱️ Timer \(label) completed in \(String(format: "%.3f", timeElapsed)) seconds")
+        logError("⏱️ Timer \(label) completed in \(String(format: "%.3f", timeElapsed)) seconds")
     }
     
     func elapsed() -> CFAbsoluteTime {
@@ -420,7 +420,7 @@ class PerformanceTimer {
     
     func logElapsed() {
         let timeElapsed = elapsed()
-        Logger.info("⏱️ \(label): \(String(format: "%.3f", timeElapsed)) seconds")
+        logInfo("⏱️ \(label): \(String(format: "%.3f", timeElapsed)) seconds")
     }
 }
 

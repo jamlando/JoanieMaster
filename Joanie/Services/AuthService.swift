@@ -1,5 +1,5 @@
 import Foundation
-import Supabase
+// import Supabase // TODO: Add Supabase dependency
 import Combine
 
 @MainActor
@@ -90,12 +90,27 @@ class AuthService: ObservableObject, ServiceProtocol {
         errorMessage = nil
         
         do {
+            // Perform secure logout
             try await supabaseService.signOut()
+            
+            // Clear any local state
+            await clearLocalState()
+            
             isLoading = false
+            Logger.shared.logInfo("AuthService: User signed out successfully")
         } catch {
             isLoading = false
             errorMessage = error.localizedDescription
+            Logger.shared.logError("AuthService: Sign out failed - \(error)")
             throw error
+        }
+    }
+    
+    private func clearLocalState() async {
+        // Clear any local authentication state
+        await MainActor.run {
+            // Reset any local flags or cached data
+            // TODO: Clear any additional local state as needed
         }
     }
     

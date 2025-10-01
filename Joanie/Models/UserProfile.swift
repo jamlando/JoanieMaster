@@ -1,5 +1,5 @@
 import Foundation
-import Supabase
+// import Supabase // TODO: Add Supabase dependency
 
 struct UserProfile: Codable, Identifiable, Equatable {
     let id: UUID
@@ -30,7 +30,7 @@ struct UserProfile: Codable, Identifiable, Equatable {
         if let fullName = fullName, !fullName.isEmpty {
             let components = fullName.components(separatedBy: " ")
             let initials = components.compactMap { $0.first?.uppercased() }
-            return String(initials.prefix(2))
+            return initials.prefix(2).joined()
         }
         return String(email.prefix(2).uppercased())
     }

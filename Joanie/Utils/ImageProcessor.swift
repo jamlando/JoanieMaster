@@ -37,7 +37,7 @@ class ImageProcessor: ObservableObject {
                 DispatchQueue.main.async {
                     self.isProcessing = false
                     self.processingProgress = 0.0
-                    Logger.error("Image processing failed: \(error.localizedDescription)")
+                    logError("Image processing failed: \(error.localizedDescription)")
                 }
             }
         }
@@ -174,7 +174,7 @@ class ImageProcessor: ObservableObject {
             height: Int(size.height),
             aspectRatio: aspectRatio,
             orientation: image.imageOrientation,
-            hasAlpha: image.cgImage?.alphaInfo != .none
+            hasAlpha: image.cgImage?.alphaInfo != CGImageAlphaInfo.none
         )
     }
     
@@ -185,7 +185,17 @@ class ImageProcessor: ObservableObject {
         guard UIImage(data: data) != nil else { return false }
         
         // Check file size
-        return data.count <= maxFileSize
+        guard data.count <= maxFileSize else { return false }
+        
+        // Check for malicious content patterns
+        guard !containsMaliciousPatterns(data) else { return false }
+        
+        // Check image dimensions (prevent extremely large images)
+        guard let image = UIImage(data: data) else { return false }
+        let maxDimension = 4096
+        guard image.size.width <= maxDimension && image.size.height <= maxDimension else { return false }
+        
+        return true
     }
     
     func validateImage(_ image: UIImage) -> Bool {
@@ -195,7 +205,74 @@ class ImageProcessor: ObservableObject {
         
         // Check if image is too large
         let maxDimension = max(size.width, size.height)
-        return maxDimension <= 10000 // 10k pixels max
+        guard maxDimension <= 10000 else { return false } // 10k pixels max
+        
+        // Check for suspicious metadata
+        guard !hasSuspiciousMetadata(image) else { return false }
+        
+        return true
+    }
+    
+    // MARK: - Security Functions
+    
+    private func containsMaliciousPatterns(_ data: Data) -> Bool {
+        // Check for common malicious file signatures
+        let maliciousSignatures: [[UInt8]] = [
+            [0x4D, 0x5A], // PE executable
+            [0x7F, 0x45, 0x4C, 0x46], // ELF executable
+            [0xCA, 0xFE, 0xBA, 0xBE], // Mach-O executable
+            [0xFE, 0xED, 0xFA, 0xCE], // Mach-O executable (reverse)
+            [0xFE, 0xED, 0xFA, 0xCF], // Mach-O executable (reverse)
+            [0xCE, 0xFA, 0xED, 0xFE], // Mach-O executable
+            [0xCF, 0xFA, 0xED, 0xFE]  // Mach-O executable
+        ]
+        
+        for signature in maliciousSignatures {
+            if data.starts(with: signature) {
+                logError("SECURITY: Malicious file signature detected")
+                return true
+            }
+        }
+        
+        // Check for embedded scripts or executables
+        let dataString = String(data: data.prefix(1024), encoding: .utf8) ?? ""
+        let suspiciousPatterns = [
+            "<script", "javascript:", "vbscript:", "onload=", "onerror=",
+            "eval(", "document.cookie", "window.location", "alert(",
+            "<?php", "<?=", "#!/bin/", "#!/usr/bin/"
+        ]
+        
+        for pattern in suspiciousPatterns {
+            if dataString.lowercased().contains(pattern.lowercased()) {
+                logError("SECURITY: Suspicious pattern detected: \(pattern)")
+                return true
+            }
+        }
+        
+        return false
+    }
+    
+    private func hasSuspiciousMetadata(_ image: UIImage) -> Bool {
+        // Check for suspicious metadata in image
+        guard let cgImage = image.cgImage else { return false }
+        
+        // Check for extremely large images that might be used for DoS
+        let pixelCount = cgImage.width * cgImage.height
+        let maxPixels = 50_000_000 // 50 megapixels
+        if pixelCount > maxPixels {
+            logError("SECURITY: Image too large: \(pixelCount) pixels")
+            return true
+        }
+        
+        return false
+    }
+    
+    func sanitizeImage(_ image: UIImage) -> UIImage? {
+        // Remove all metadata and create a clean image
+        let renderer = UIGraphicsImageRenderer(size: image.size)
+        return renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: image.size))
+        }
     }
     
     // MARK: - Image Enhancement
@@ -232,7 +309,7 @@ class ImageProcessor: ObservableObject {
         
         let request = VNClassifyImageRequest { request, error in
             if let error = error {
-                Logger.error("Image analysis failed: \(error.localizedDescription)")
+                logError("Image analysis failed: \(error.localizedDescription)")
                 completion(ImageAnalysis())
                 return
             }
@@ -244,7 +321,7 @@ class ImageProcessor: ObservableObject {
             
             let classifications = observations
                 .filter { $0.confidence > 0.5 }
-                .map { Classification(identifier: $0.identifier, confidence: $0.confidence) }
+                .map { Classification(identifier: $0.identifier, confidence: Double($0.confidence)) }
             
             let analysis = ImageAnalysis(classifications: classifications)
             completion(analysis)
@@ -254,7 +331,7 @@ class ImageProcessor: ObservableObject {
         do {
             try handler.perform([request])
         } catch {
-            Logger.error("Image analysis request failed: \(error.localizedDescription)")
+            logError("Image analysis request failed: \(error.localizedDescription)")
             completion(ImageAnalysis())
         }
     }

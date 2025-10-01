@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 import Vision
 import Combine
 
@@ -16,7 +17,7 @@ class AIService: ObservableObject, ServiceProtocol {
     // MARK: - Initialization
     
     init() {
-        self.supabaseService = SupabaseService()
+        self.supabaseService = SupabaseService.shared
         setupBindings()
     }
     
@@ -227,20 +228,20 @@ class AIService: ObservableObject, ServiceProtocol {
                 return
             }
             
-            let request = VNRecognizeObjectsRequest { request, error in
+            let request = VNClassifyImageRequest { request, error in
                 if let error = error {
                     continuation.resume(throwing: error)
                     return
                 }
                 
-                guard let observations = request.results as? [VNRecognizedObjectObservation] else {
+                guard let observations = request.results as? [VNClassificationObservation] else {
                     continuation.resume(throwing: AppError.aiServiceError("No object detection results"))
                     return
                 }
                 
                 let objects = observations
                     .filter { $0.confidence > 0.5 }
-                    .compactMap { $0.labels.first?.identifier }
+                    .compactMap { $0.identifier }
                     .prefix(10)
                 
                 continuation.resume(returning: Array(objects))

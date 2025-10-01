@@ -77,11 +77,11 @@ class ProfileViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            userProfile = try await supabaseService.getUserProfile(currentUser.id)
+            userProfile = try await supabaseService.getUserProfile()
             await loadChildren()
         } catch {
             errorMessage = error.localizedDescription
-            Logger.error("Failed to load profile: \(error)")
+            logError("Failed to load profile: \(error)")
         }
         
         isLoading = false
@@ -98,7 +98,7 @@ class ProfileViewModel: ObservableObject {
             appState.children = children
         } catch {
             errorMessage = error.localizedDescription
-            Logger.error("Failed to load children: \(error)")
+            logError("Failed to load children: \(error)")
         }
     }
     
@@ -115,7 +115,7 @@ class ProfileViewModel: ObservableObject {
     // MARK: - Profile Actions
     
     func updateProfile(name: String, avatarURL: String? = nil) async {
-        guard var profile = userProfile else { return }
+        guard let profile = userProfile else { return }
         
         isLoading = true
         errorMessage = nil
@@ -130,7 +130,7 @@ class ProfileViewModel: ObservableObject {
             
         } catch {
             errorMessage = "Failed to update profile: \(error.localizedDescription)"
-            Logger.error("Failed to update profile: \(error)")
+            logError("Failed to update profile: \(error)")
         }
         
         isLoading = false
@@ -152,7 +152,7 @@ class ProfileViewModel: ObservableObject {
                 avatarURL: avatarURL
             )
             
-            let createdChild = try await supabaseService.createChild(newChild)
+            let createdChild = try await supabaseService.createChild(name: newChild.name, birthDate: newChild.birthDate)
             children.append(createdChild)
             appState.addChild(createdChild)
             
@@ -163,7 +163,7 @@ class ProfileViewModel: ObservableObject {
             
         } catch {
             errorMessage = "Failed to add child: \(error.localizedDescription)"
-            Logger.error("Failed to add child: \(error)")
+            logError("Failed to add child: \(error)")
         }
         
         isLoading = false
@@ -177,7 +177,7 @@ class ProfileViewModel: ObservableObject {
             let updatedChild = child.withUpdatedName(name).withUpdatedBirthDate(birthDate ?? child.birthDate ?? Date())
             let finalChild = avatarURL != nil ? updatedChild.withUpdatedAvatar(avatarURL!) : updatedChild
             
-            try await supabaseService.updateChild(finalChild)
+            _ = try await supabaseService.updateChild(finalChild)
             
             if let index = children.firstIndex(where: { $0.id == child.id }) {
                 children[index] = finalChild
@@ -186,7 +186,7 @@ class ProfileViewModel: ObservableObject {
             
         } catch {
             errorMessage = "Failed to update child: \(error.localizedDescription)"
-            Logger.error("Failed to update child: \(error)")
+            logError("Failed to update child: \(error)")
         }
         
         isLoading = false
@@ -204,7 +204,7 @@ class ProfileViewModel: ObservableObject {
             
         } catch {
             errorMessage = "Failed to delete child: \(error.localizedDescription)"
-            Logger.error("Failed to delete child: \(error)")
+            logError("Failed to delete child: \(error)")
         }
         
         isLoading = false
@@ -240,7 +240,7 @@ class ProfileViewModel: ObservableObject {
             appState.logout()
         } catch {
             errorMessage = "Failed to logout: \(error.localizedDescription)"
-            Logger.error("Failed to logout: \(error)")
+            logError("Failed to logout: \(error)")
         }
     }
     
@@ -255,7 +255,7 @@ class ProfileViewModel: ObservableObject {
             appState.logout()
         } catch {
             errorMessage = "Failed to delete account: \(error.localizedDescription)"
-            Logger.error("Failed to delete account: \(error)")
+            logError("Failed to delete account: \(error)")
         }
         
         isLoading = false

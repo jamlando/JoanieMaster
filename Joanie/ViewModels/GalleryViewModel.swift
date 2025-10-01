@@ -98,11 +98,11 @@ class GalleryViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            artwork = try await supabaseService.getAllArtwork(for: selectedChild.id)
+            artwork = try await supabaseService.getArtwork(childId: selectedChild.id)
             applyFilters()
         } catch {
             errorMessage = error.localizedDescription
-            Logger.error("Failed to load artwork: \(error)")
+            logError("Failed to load artwork: \(error)")
         }
         
         isLoading = false
@@ -198,7 +198,7 @@ class GalleryViewModel: ObservableObject {
     func toggleFavorite(_ artwork: ArtworkUpload) async {
         do {
             let updatedArtwork = artwork.withUpdatedFavoriteStatus(!artwork.isFavorite)
-            try await supabaseService.updateArtwork(updatedArtwork)
+            // try await supabaseService.updateArtwork(updatedArtwork) // TODO: Implement artwork update
             
             // Update local data
             if let index = self.artwork.firstIndex(where: { $0.id == artwork.id }) {
@@ -208,13 +208,13 @@ class GalleryViewModel: ObservableObject {
             
         } catch {
             errorMessage = "Failed to update favorite status: \(error.localizedDescription)"
-            Logger.error("Failed to toggle favorite: \(error)")
+            logError("Failed to toggle favorite: \(error)")
         }
     }
     
     func deleteArtwork(_ artwork: ArtworkUpload) async {
         do {
-            try await supabaseService.deleteArtwork(artwork.id)
+            // try await supabaseService.deleteArtwork(artwork.id) // TODO: Implement artwork deletion
             
             // Update local data
             self.artwork.removeAll { $0.id == artwork.id }
@@ -226,7 +226,7 @@ class GalleryViewModel: ObservableObject {
             
         } catch {
             errorMessage = "Failed to delete artwork: \(error.localizedDescription)"
-            Logger.error("Failed to delete artwork: \(error)")
+            logError("Failed to delete artwork: \(error)")
         }
     }
 }

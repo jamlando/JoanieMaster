@@ -20,14 +20,14 @@ class ErrorHandler: ObservableObject {
         currentError = appError
         isShowingError = true
         
-        Logger.error("Error handled: \(appError.localizedDescription)")
+        logError("Error handled: \(appError.localizedDescription)")
     }
     
     func handle(_ appError: AppError) {
         currentError = appError
         isShowingError = true
         
-        Logger.error("App error handled: \(appError.localizedDescription)")
+        logError("App error handled: \(appError.localizedDescription)")
     }
     
     func clearError() {

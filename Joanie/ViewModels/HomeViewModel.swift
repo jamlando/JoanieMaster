@@ -86,7 +86,7 @@ class HomeViewModel: ObservableObject {
             
         } catch {
             errorMessage = error.localizedDescription
-            Logger.error("Failed to load home data: \(error)")
+            logError("Failed to load home data: \(error)")
         }
         
         isLoading = false

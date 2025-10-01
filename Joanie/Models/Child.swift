@@ -36,7 +36,7 @@ struct Child: Codable, Identifiable, Equatable {
     var initials: String {
         let components = name.components(separatedBy: " ")
         let initials = components.compactMap { $0.first?.uppercased() }
-        return String(initials.prefix(2))
+        return initials.prefix(2).joined()
     }
     
     var ageGroup: AgeGroup {

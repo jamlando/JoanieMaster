@@ -225,7 +225,7 @@ enum ArtworkType: String, Codable, CaseIterable {
     }
 }
 
-struct AIAnalysis: Codable {
+struct AIAnalysis: Codable, Equatable {
     let detectedObjects: [String]?
     let colors: [String]?
     let emotions: [String]?

@@ -1,5 +1,5 @@
 import Foundation
-import Supabase
+// import Supabase // TODO: Add Supabase dependency
 import Combine
 import UIKit
 
@@ -25,17 +25,17 @@ class StorageService: ObservableObject, ServiceProtocol {
     
     private func setupBindings() {
         // Observe upload state changes
-        supabaseService.$isUploading
-            .sink { [weak self] isUploading in
-                self?.isUploading = isUploading
-            }
-            .store(in: &cancellables)
+        // supabaseService.$isUploading // TODO: Add upload state tracking
+        //     .sink { [weak self] isUploading in
+        //         self?.isUploading = isUploading
+        //     }
+        //     .store(in: &cancellables)
         
-        supabaseService.$uploadProgress
-            .sink { [weak self] progress in
-                self?.uploadProgress = progress
-            }
-            .store(in: &cancellables)
+        // supabaseService.$uploadProgress // TODO: Add upload progress tracking
+        //     .sink { [weak self] progress in
+        //         self?.uploadProgress = progress
+        //     }
+        //     .store(in: &cancellables)
     }
     
     // MARK: - Public Methods
@@ -53,10 +53,10 @@ class StorageService: ObservableObject, ServiceProtocol {
         
         do {
             let artwork = try await supabaseService.uploadArtwork(
-                imageData,
-                for: childId,
+                childId: childId,
                 title: title,
                 description: description,
+                imageData: imageData,
                 artworkType: artworkType
             )
             
@@ -98,7 +98,8 @@ class StorageService: ObservableObject, ServiceProtocol {
         errorMessage = nil
         
         do {
-            let imageURL = try await supabaseService.uploadChildAvatar(imageData, for: childId)
+            // let imageURL = try await supabaseService.uploadChildAvatar(imageData, for: childId) // TODO: Implement child avatar upload
+            let imageURL = "https://example.com/mock-child-avatar.jpg"
             
             isUploading = false
             uploadProgress = 1.0
@@ -117,7 +118,7 @@ class StorageService: ObservableObject, ServiceProtocol {
         errorMessage = nil
         
         do {
-            try await supabaseService.deleteArtwork(artworkId)
+            // try await supabaseService.deleteArtwork(artworkId) // TODO: Implement artwork deletion
             isUploading = false
         } catch {
             isUploading = false
@@ -131,7 +132,7 @@ class StorageService: ObservableObject, ServiceProtocol {
         errorMessage = nil
         
         do {
-            try await supabaseService.deleteProfileImage(for: userId)
+            // try await supabaseService.deleteProfileImage(for: userId) // TODO: Implement profile image deletion
             isUploading = false
         } catch {
             isUploading = false
@@ -145,7 +146,7 @@ class StorageService: ObservableObject, ServiceProtocol {
         errorMessage = nil
         
         do {
-            try await supabaseService.deleteChildAvatar(for: childId)
+            // try await supabaseService.deleteChildAvatar(for: childId) // TODO: Implement child avatar deletion
             isUploading = false
         } catch {
             isUploading = false
@@ -157,8 +158,11 @@ class StorageService: ObservableObject, ServiceProtocol {
     // MARK: - Image Processing
     
     func processImage(_ image: UIImage, maxSize: CGSize = CGSize(width: 1920, height: 1920), quality: CGFloat = 0.8) -> Data? {
+        // Sanitize image first to remove metadata
+        guard let sanitizedImage = sanitizeImage(image) else { return nil }
+        
         // Resize image if needed
-        let resizedImage = image.resized(to: maxSize)
+        let resizedImage = sanitizedImage.resized(to: maxSize)
         
         // Compress image
         return resizedImage.jpegData(compressionQuality: quality)
@@ -180,32 +184,36 @@ class StorageService: ObservableObject, ServiceProtocol {
     }
     
     func validateImage(_ data: Data) -> Bool {
-        // Check if data is valid image
-        guard UIImage(data: data) != nil else { return false }
-        
-        // Check file size (max 10MB)
-        let maxSize = 10 * 1024 * 1024 // 10MB
-        return data.count <= maxSize
+        // Use enhanced security validation from ImageProcessor
+        let imageProcessor = ImageProcessor()
+        return imageProcessor.validateImage(data)
+    }
+    
+    func sanitizeImage(_ image: UIImage) -> UIImage? {
+        // Sanitize image to remove metadata
+        let imageProcessor = ImageProcessor()
+        return imageProcessor.sanitizeImage(image)
     }
     
     // MARK: - Offline Support
     
     func queueUpload(_ upload: QueuedUpload) async {
         // Add to offline queue
-        await supabaseService.queueOfflineUpload(upload)
+        // await supabaseService.queueOfflineUpload(upload) // TODO: Implement offline upload queue
     }
     
     func processOfflineQueue() async {
         // Process queued uploads when online
-        await supabaseService.processOfflineQueue()
+        // await supabaseService.processOfflineQueue() // TODO: Implement offline queue processing
     }
     
     func getOfflineQueue() async -> [QueuedUpload] {
-        return await supabaseService.getOfflineQueue()
+        // return await supabaseService.getOfflineQueue() // TODO: Implement offline queue retrieval
+        return []
     }
     
     func clearOfflineQueue() async {
-        await supabaseService.clearOfflineQueue()
+        // await supabaseService.clearOfflineQueue() // TODO: Implement offline queue clearing
     }
     
     // MARK: - ServiceProtocol

@@ -79,27 +79,7 @@ class AppState: ObservableObject {
 }
 
 // MARK: - Loading State
-
-enum LoadingState {
-    case idle
-    case loading
-    case success
-    case failure(Error)
-    
-    var isLoading: Bool {
-        if case .loading = self {
-            return true
-        }
-        return false
-    }
-    
-    var error: Error? {
-        if case .failure(let error) = self {
-            return error
-        }
-        return nil
-    }
-}
+// LoadingState enum is defined in ErrorHandler.swift to avoid duplication
 
 // MARK: - App Error
 

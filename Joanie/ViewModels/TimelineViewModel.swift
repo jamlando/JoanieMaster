@@ -95,8 +95,8 @@ class TimelineViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            async let artworkTask = supabaseService.getAllArtwork(for: selectedChild.id)
-            async let storiesTask = supabaseService.getAllStories(for: selectedChild.id)
+            async let artworkTask = supabaseService.getArtwork(childId: selectedChild.id)
+            async let storiesTask = supabaseService.getStories(childId: selectedChild.id)
             async let progressTask = supabaseService.getChildProgress(for: selectedChild.id)
             
             let (artwork, stories, progress) = try await (artworkTask, storiesTask, progressTask)
@@ -111,7 +111,7 @@ class TimelineViewModel: ObservableObject {
             
         } catch {
             errorMessage = error.localizedDescription
-            Logger.error("Failed to load timeline: \(error)")
+            logError("Failed to load timeline: \(error)")
         }
         
         isLoading = false
