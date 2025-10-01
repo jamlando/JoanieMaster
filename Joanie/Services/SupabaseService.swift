@@ -719,6 +719,227 @@ struct SessionInfo {
         // TODO: Implement real Supabase stories retrieval
         return []
     }
+
+// MARK: - Supabase Error Mapping Service
+
+class SupabaseErrorMapper {
+    static let shared = SupabaseErrorMapper()
+    
+    private init() {}
+    
+    /// Maps Supabase error codes to AuthenticationError
+    func mapSupabaseError(_ error: Error) -> AuthenticationError {
+        // Handle URL errors (network issues)
+        if let urlError = error as? URLError {
+            return mapURLError(urlError)
+        }
+        
+        // Handle HTTP status codes
+        if let httpError = error as? HTTPError {
+            return mapHTTPError(httpError)
+        }
+        
+        // Handle Supabase-specific errors
+        if let supabaseError = error as? SupabaseError {
+            return mapSupabaseError(supabaseError)
+        }
+        
+        // Handle authentication-specific errors
+        if let authError = error as? AuthenticationError {
+            return authError
+        }
+        
+        // Handle generic errors
+        return mapGenericError(error)
+    }
+    
+    private func mapURLError(_ urlError: URLError) -> AuthenticationError {
+        switch urlError.code {
+        case .notConnectedToInternet, .networkConnectionLost:
+            return .networkUnavailable
+        case .timedOut:
+            return .networkTimeout
+        case .cannotConnectToHost, .cannotFindHost:
+            return .networkConnectionFailed
+        case .slowServerResponse:
+            return .networkSlowConnection
+        default:
+            return .networkConnectionFailed
+        }
+    }
+    
+    private func mapHTTPError(_ httpError: HTTPError) -> AuthenticationError {
+        switch httpError.statusCode {
+        case 400:
+            return .invalidInput("Request data")
+        case 401:
+            return .invalidCredentials
+        case 403:
+            return .accountDisabled
+        case 404:
+            return .userNotFound
+        case 409:
+            return .emailAlreadyExists
+        case 422:
+            return .validationFailed("Request validation")
+        case 429:
+            return .rateLimitExceeded
+        case 500:
+            return .serverError(500)
+        case 502, 503:
+            return .serviceUnavailable
+        case 504:
+            return .serverOverloaded
+        default:
+            return .serverError(httpError.statusCode)
+        }
+    }
+    
+    private func mapSupabaseError(_ supabaseError: SupabaseError) -> AuthenticationError {
+        switch supabaseError {
+        case .notAuthenticated:
+            return .sessionExpired
+        case .networkError:
+            return .networkConnectionFailed
+        case .invalidResponse:
+            return .serverError(500)
+        case .storageError:
+            return .storageError
+        case .notImplemented:
+            return .unexpectedError
+        }
+    }
+    
+    private func mapGenericError(_ error: Error) -> AuthenticationError {
+        let message = error.localizedDescription
+        
+        // Check for common error patterns
+        if message.contains("network") || message.contains("connection") {
+            return .networkConnectionFailed
+        }
+        
+        if message.contains("timeout") {
+            return .networkTimeout
+        }
+        
+        if message.contains("unauthorized") || message.contains("invalid credentials") {
+            return .invalidCredentials
+        }
+        
+        if message.contains("not found") {
+            return .userNotFound
+        }
+        
+        if message.contains("already exists") {
+            return .emailAlreadyExists
+        }
+        
+        if message.contains("weak password") {
+            return .weakPassword
+        }
+        
+        if message.contains("rate limit") {
+            return .rateLimitExceeded
+        }
+        
+        if message.contains("server error") {
+            return .serverError(500)
+        }
+        
+        return .unknown(message)
+    }
+    
+    /// Maps Supabase error codes to AuthenticationError with context
+    func mapSupabaseErrorWithContext(_ error: Error, context: [String: Any] = [:]) -> AuthenticationError {
+        let mappedError = mapSupabaseError(error)
+        
+        // Add context information if available
+        if let errorCode = context["error_code"] as? String {
+            return mapByErrorCode(errorCode, context: context)
+        }
+        
+        return mappedError
+    }
+    
+    private func mapByErrorCode(_ errorCode: String, context: [String: Any]) -> AuthenticationError {
+        switch errorCode.lowercased() {
+        case "invalid_credentials", "invalid_email_or_password":
+            return .invalidCredentials
+        case "user_not_found", "email_not_found":
+            return .userNotFound
+        case "email_already_exists", "user_already_exists":
+            return .emailAlreadyExists
+        case "weak_password", "password_too_weak":
+            return .weakPassword
+        case "account_locked", "too_many_attempts":
+            return .accountLocked
+        case "account_disabled", "user_disabled":
+            return .accountDisabled
+        case "email_not_verified", "unverified_email":
+            return .emailNotVerified
+        case "session_expired", "token_expired":
+            return .sessionExpired
+        case "invalid_token", "malformed_token":
+            return .invalidToken
+        case "rate_limit_exceeded", "too_many_requests":
+            return .rateLimitExceeded
+        case "network_error", "connection_failed":
+            return .networkConnectionFailed
+        case "server_error", "internal_server_error":
+            let code = context["status_code"] as? Int ?? 500
+            return .serverError(code)
+        case "service_unavailable", "maintenance":
+            return .serviceUnavailable
+        case "validation_failed", "invalid_input":
+            let field = context["field"] as? String ?? "input"
+            return .validationFailed(field)
+        case "missing_field", "required_field":
+            let field = context["field"] as? String ?? "field"
+            return .missingRequiredField(field)
+        case "storage_error", "upload_failed":
+            return .storageError
+        case "keychain_error", "secure_storage_error":
+            return .keychainError
+        case "biometric_error", "face_id_error", "touch_id_error":
+            return .biometricError
+        case "permission_denied", "access_denied":
+            return .permissionDenied
+        case "apple_sign_in_cancelled":
+            return .appleSignInCancelled
+        case "apple_sign_in_failed":
+            return .appleSignInFailed
+        case "apple_sign_in_not_available":
+            return .appleSignInNotAvailable
+        case "password_reset_failed":
+            return .passwordResetFailed
+        case "password_reset_expired":
+            return .passwordResetExpired
+        case "password_reset_invalid_token":
+            return .passwordResetInvalidToken
+        case "password_reset_too_frequent":
+            return .passwordResetTooFrequent
+        case "account_deletion_failed":
+            return .accountDeletionFailed
+        case "profile_update_failed":
+            return .profileUpdateFailed
+        case "image_upload_failed":
+            return .imageUploadFailed
+        default:
+            return .unknown(errorCode)
+        }
+    }
+}
+
+// MARK: - HTTP Error
+
+struct HTTPError: Error {
+    let statusCode: Int
+    let message: String?
+    
+    init(statusCode: Int, message: String? = nil) {
+        self.statusCode = statusCode
+        self.message = message
+    }
 }
 
 // MARK: - Error Types
@@ -729,6 +950,28 @@ enum SupabaseError: Error, LocalizedError {
     case invalidResponse
     case storageError
     case notImplemented
+    case authenticationFailed(String)
+    case userNotFound
+    case emailAlreadyExists
+    case weakPassword
+    case accountLocked
+    case accountDisabled
+    case emailNotVerified
+    case sessionExpired
+    case invalidToken
+    case rateLimitExceeded
+    case serverError(Int)
+    case serviceUnavailable
+    case validationFailed(String)
+    case missingField(String)
+    case permissionDenied
+    case biometricError
+    case appleSignInFailed
+    case passwordResetFailed
+    case accountDeletionFailed
+    case profileUpdateFailed
+    case imageUploadFailed
+    case unknown(String)
     
     var errorDescription: String? {
         switch self {
@@ -742,6 +985,82 @@ enum SupabaseError: Error, LocalizedError {
             return "Storage operation failed"
         case .notImplemented:
             return "Feature not implemented"
+        case .authenticationFailed(let message):
+            return "Authentication failed: \(message)"
+        case .userNotFound:
+            return "User not found"
+        case .emailAlreadyExists:
+            return "Email already exists"
+        case .weakPassword:
+            return "Password is too weak"
+        case .accountLocked:
+            return "Account is locked"
+        case .accountDisabled:
+            return "Account is disabled"
+        case .emailNotVerified:
+            return "Email not verified"
+        case .sessionExpired:
+            return "Session has expired"
+        case .invalidToken:
+            return "Invalid authentication token"
+        case .rateLimitExceeded:
+            return "Rate limit exceeded"
+        case .serverError(let code):
+            return "Server error (Code: \(code))"
+        case .serviceUnavailable:
+            return "Service is unavailable"
+        case .validationFailed(let field):
+            return "Validation failed for \(field)"
+        case .missingField(let field):
+            return "Missing required field: \(field)"
+        case .permissionDenied:
+            return "Permission denied"
+        case .biometricError:
+            return "Biometric authentication failed"
+        case .appleSignInFailed:
+            return "Apple Sign-In failed"
+        case .passwordResetFailed:
+            return "Password reset failed"
+        case .accountDeletionFailed:
+            return "Account deletion failed"
+        case .profileUpdateFailed:
+            return "Profile update failed"
+        case .imageUploadFailed:
+            return "Image upload failed"
+        case .unknown(let message):
+            return message
+        }
+    }
+    
+    var errorCode: String {
+        switch self {
+        case .notAuthenticated: return "NOT_AUTHENTICATED"
+        case .networkError: return "NETWORK_ERROR"
+        case .invalidResponse: return "INVALID_RESPONSE"
+        case .storageError: return "STORAGE_ERROR"
+        case .notImplemented: return "NOT_IMPLEMENTED"
+        case .authenticationFailed: return "AUTHENTICATION_FAILED"
+        case .userNotFound: return "USER_NOT_FOUND"
+        case .emailAlreadyExists: return "EMAIL_ALREADY_EXISTS"
+        case .weakPassword: return "WEAK_PASSWORD"
+        case .accountLocked: return "ACCOUNT_LOCKED"
+        case .accountDisabled: return "ACCOUNT_DISABLED"
+        case .emailNotVerified: return "EMAIL_NOT_VERIFIED"
+        case .sessionExpired: return "SESSION_EXPIRED"
+        case .invalidToken: return "INVALID_TOKEN"
+        case .rateLimitExceeded: return "RATE_LIMIT_EXCEEDED"
+        case .serverError(let code): return "SERVER_ERROR_\(code)"
+        case .serviceUnavailable: return "SERVICE_UNAVAILABLE"
+        case .validationFailed(let field): return "VALIDATION_FAILED_\(field.uppercased())"
+        case .missingField(let field): return "MISSING_FIELD_\(field.uppercased())"
+        case .permissionDenied: return "PERMISSION_DENIED"
+        case .biometricError: return "BIOMETRIC_ERROR"
+        case .appleSignInFailed: return "APPLE_SIGN_IN_FAILED"
+        case .passwordResetFailed: return "PASSWORD_RESET_FAILED"
+        case .accountDeletionFailed: return "ACCOUNT_DELETION_FAILED"
+        case .profileUpdateFailed: return "PROFILE_UPDATE_FAILED"
+        case .imageUploadFailed: return "IMAGE_UPLOAD_FAILED"
+        case .unknown(let message): return "UNKNOWN_\(message.hashValue)"
         }
     }
 }

@@ -44,14 +44,22 @@ class AuthService: ObservableObject, ServiceProtocol {
         isLoading = true
         errorMessage = nil
         
-        do {
-            let user = try await supabaseService.signUp(email: email, password: password, fullName: fullName)
-            isLoading = false
+        let result = await RetryService.shared.retryWithAuthErrorHandling(
+            operation: {
+                try await supabaseService.signUp(email: email, password: password, fullName: fullName)
+            },
+            config: .default
+        )
+        
+        isLoading = false
+        
+        switch result {
+        case .success(let user):
             return user
-        } catch {
-            isLoading = false
-            errorMessage = error.localizedDescription
-            throw error
+        case .failure(let error), .maxAttemptsReached(let error):
+            let mappedError = SupabaseErrorMapper.shared.mapSupabaseError(error)
+            errorMessage = mappedError.localizedDescription
+            throw mappedError
         }
     }
     
@@ -59,14 +67,22 @@ class AuthService: ObservableObject, ServiceProtocol {
         isLoading = true
         errorMessage = nil
         
-        do {
-            let user = try await supabaseService.signIn(email: email, password: password)
-            isLoading = false
+        let result = await RetryService.shared.retryWithAuthErrorHandling(
+            operation: {
+                try await supabaseService.signIn(email: email, password: password)
+            },
+            config: .default
+        )
+        
+        isLoading = false
+        
+        switch result {
+        case .success(let user):
             return user
-        } catch {
-            isLoading = false
-            errorMessage = error.localizedDescription
-            throw error
+        case .failure(let error), .maxAttemptsReached(let error):
+            let mappedError = SupabaseErrorMapper.shared.mapSupabaseError(error)
+            errorMessage = mappedError.localizedDescription
+            throw mappedError
         }
     }
     
@@ -80,8 +96,9 @@ class AuthService: ObservableObject, ServiceProtocol {
             return user
         } catch {
             isLoading = false
-            errorMessage = error.localizedDescription
-            throw error
+            let mappedError = SupabaseErrorMapper.shared.mapSupabaseError(error)
+            errorMessage = mappedError.localizedDescription
+            throw mappedError
         }
     }
     
@@ -100,9 +117,10 @@ class AuthService: ObservableObject, ServiceProtocol {
             Logger.shared.logInfo("AuthService: User signed out successfully")
         } catch {
             isLoading = false
-            errorMessage = error.localizedDescription
-            Logger.shared.logError("AuthService: Sign out failed - \(error)")
-            throw error
+            let mappedError = SupabaseErrorMapper.shared.mapSupabaseError(error)
+            errorMessage = mappedError.localizedDescription
+            Logger.shared.logError("AuthService: Sign out failed - \(mappedError)")
+            throw mappedError
         }
     }
     
@@ -123,8 +141,9 @@ class AuthService: ObservableObject, ServiceProtocol {
             isLoading = false
         } catch {
             isLoading = false
-            errorMessage = error.localizedDescription
-            throw error
+            let mappedError = SupabaseErrorMapper.shared.mapSupabaseError(error)
+            errorMessage = mappedError.localizedDescription
+            throw mappedError
         }
     }
     
@@ -137,14 +156,15 @@ class AuthService: ObservableObject, ServiceProtocol {
             isLoading = false
         } catch {
             isLoading = false
-            errorMessage = error.localizedDescription
-            throw error
+            let mappedError = SupabaseErrorMapper.shared.mapSupabaseError(error)
+            errorMessage = mappedError.localizedDescription
+            throw mappedError
         }
     }
     
     func deleteAccount() async throws {
         guard let currentUser = currentUser else {
-            throw AppError.authenticationError("No user logged in")
+            throw AuthenticationError.sessionNotFound
         }
         
         isLoading = true
@@ -155,8 +175,9 @@ class AuthService: ObservableObject, ServiceProtocol {
             isLoading = false
         } catch {
             isLoading = false
-            errorMessage = error.localizedDescription
-            throw error
+            let mappedError = SupabaseErrorMapper.shared.mapSupabaseError(error)
+            errorMessage = mappedError.localizedDescription
+            throw mappedError
         }
     }
     
@@ -172,14 +193,15 @@ class AuthService: ObservableObject, ServiceProtocol {
             isLoading = false
         } catch {
             isLoading = false
-            errorMessage = error.localizedDescription
-            throw error
+            let mappedError = SupabaseErrorMapper.shared.mapSupabaseError(error)
+            errorMessage = mappedError.localizedDescription
+            throw mappedError
         }
     }
     
     func uploadProfileImage(_ imageData: Data) async throws -> String {
         guard let currentUser = currentUser else {
-            throw AppError.authenticationError("No user logged in")
+            throw AuthenticationError.sessionNotFound
         }
         
         isLoading = true
@@ -191,8 +213,9 @@ class AuthService: ObservableObject, ServiceProtocol {
             return imageURL
         } catch {
             isLoading = false
-            errorMessage = error.localizedDescription
-            throw error
+            let mappedError = SupabaseErrorMapper.shared.mapSupabaseError(error)
+            errorMessage = mappedError.localizedDescription
+            throw mappedError
         }
     }
     
@@ -202,13 +225,22 @@ class AuthService: ObservableObject, ServiceProtocol {
         isLoading = true
         errorMessage = nil
         
-        do {
-            try await supabaseService.checkSession()
-            isLoading = false
-        } catch {
-            isLoading = false
-            errorMessage = error.localizedDescription
-            throw error
+        let result = await RetryService.shared.retryWithAuthErrorHandling(
+            operation: {
+                try await supabaseService.checkSession()
+            },
+            config: .quick
+        )
+        
+        isLoading = false
+        
+        switch result {
+        case .success:
+            return
+        case .failure(let error), .maxAttemptsReached(let error):
+            let mappedError = SupabaseErrorMapper.shared.mapSupabaseError(error)
+            errorMessage = mappedError.localizedDescription
+            throw mappedError
         }
     }
     
@@ -216,13 +248,22 @@ class AuthService: ObservableObject, ServiceProtocol {
         isLoading = true
         errorMessage = nil
         
-        do {
-            try await supabaseService.refreshSession()
-            isLoading = false
-        } catch {
-            isLoading = false
-            errorMessage = error.localizedDescription
-            throw error
+        let result = await RetryService.shared.retryWithAuthErrorHandling(
+            operation: {
+                try await supabaseService.refreshSession()
+            },
+            config: .quick
+        )
+        
+        isLoading = false
+        
+        switch result {
+        case .success:
+            return
+        case .failure(let error), .maxAttemptsReached(let error):
+            let mappedError = SupabaseErrorMapper.shared.mapSupabaseError(error)
+            errorMessage = mappedError.localizedDescription
+            throw mappedError
         }
     }
     
@@ -291,45 +332,457 @@ enum AuthenticationState {
 
 // MARK: - Authentication Error
 
-enum AuthenticationError: LocalizedError {
+enum AuthenticationError: LocalizedError, Equatable {
+    // MARK: - Network-related errors
+    case networkUnavailable
+    case networkTimeout
+    case networkConnectionFailed
+    case networkSlowConnection
+    
+    // MARK: - Authentication errors
     case invalidCredentials
     case userNotFound
     case emailAlreadyExists
     case weakPassword
-    case networkError
+    case accountLocked
+    case accountDisabled
+    case emailNotVerified
+    case tooManyAttempts
+    case passwordExpired
+    case invalidEmailFormat
+    case passwordTooCommon
+    
+    // MARK: - Session errors
+    case sessionExpired
+    case sessionInvalid
+    case refreshTokenExpired
+    case sessionNotFound
+    case sessionCorrupted
+    
+    // MARK: - Server errors
+    case serverError(Int)
+    case serviceUnavailable
+    case rateLimitExceeded
+    case serverMaintenance
+    case serverOverloaded
+    
+    // MARK: - Client errors
+    case invalidInput(String)
+    case missingRequiredField(String)
+    case validationFailed(String)
+    case invalidToken
+    case tokenExpired
+    
+    // MARK: - System errors
+    case keychainError
+    case storageError
+    case biometricError
+    case deviceNotSupported
+    case permissionDenied
+    
+    // MARK: - Apple Sign-In specific errors
+    case appleSignInCancelled
+    case appleSignInFailed
+    case appleSignInNotAvailable
+    case appleSignInInvalidResponse
+    
+    // MARK: - Password reset errors
+    case passwordResetFailed
+    case passwordResetExpired
+    case passwordResetInvalidToken
+    case passwordResetTooFrequent
+    
+    // MARK: - Account management errors
+    case accountDeletionFailed
+    case accountUpdateFailed
+    case profileUpdateFailed
+    case imageUploadFailed
+    
+    // MARK: - Generic errors
     case unknown(String)
+    case unexpectedError
+    
+    // MARK: - Error Descriptions
     
     var errorDescription: String? {
         switch self {
+        // Network-related errors
+        case .networkUnavailable:
+            return "No internet connection available"
+        case .networkTimeout:
+            return "Request timed out. Please check your connection"
+        case .networkConnectionFailed:
+            return "Failed to connect to the server"
+        case .networkSlowConnection:
+            return "Connection is slow. Please try again"
+            
+        // Authentication errors
         case .invalidCredentials:
             return "Invalid email or password"
         case .userNotFound:
-            return "User not found"
+            return "No account found with this email"
         case .emailAlreadyExists:
-            return "Email already exists"
+            return "An account with this email already exists"
         case .weakPassword:
             return "Password is too weak"
-        case .networkError:
-            return "Network error occurred"
+        case .accountLocked:
+            return "Account has been locked due to multiple failed attempts"
+        case .accountDisabled:
+            return "Account has been disabled"
+        case .emailNotVerified:
+            return "Please verify your email address"
+        case .tooManyAttempts:
+            return "Too many failed attempts. Please try again later"
+        case .passwordExpired:
+            return "Your password has expired"
+        case .invalidEmailFormat:
+            return "Please enter a valid email address"
+        case .passwordTooCommon:
+            return "Password is too common. Please choose a stronger password"
+            
+        // Session errors
+        case .sessionExpired:
+            return "Your session has expired"
+        case .sessionInvalid:
+            return "Invalid session. Please sign in again"
+        case .refreshTokenExpired:
+            return "Refresh token has expired"
+        case .sessionNotFound:
+            return "No active session found"
+        case .sessionCorrupted:
+            return "Session data is corrupted"
+            
+        // Server errors
+        case .serverError(let code):
+            return "Server error occurred (Code: \(code))"
+        case .serviceUnavailable:
+            return "Service is temporarily unavailable"
+        case .rateLimitExceeded:
+            return "Too many requests. Please wait before trying again"
+        case .serverMaintenance:
+            return "Server is under maintenance"
+        case .serverOverloaded:
+            return "Server is overloaded. Please try again later"
+            
+        // Client errors
+        case .invalidInput(let field):
+            return "Invalid input for \(field)"
+        case .missingRequiredField(let field):
+            return "\(field) is required"
+        case .validationFailed(let reason):
+            return "Validation failed: \(reason)"
+        case .invalidToken:
+            return "Invalid authentication token"
+        case .tokenExpired:
+            return "Authentication token has expired"
+            
+        // System errors
+        case .keychainError:
+            return "Failed to access secure storage"
+        case .storageError:
+            return "Failed to save data"
+        case .biometricError:
+            return "Biometric authentication failed"
+        case .deviceNotSupported:
+            return "This device is not supported"
+        case .permissionDenied:
+            return "Permission denied"
+            
+        // Apple Sign-In specific errors
+        case .appleSignInCancelled:
+            return "Apple Sign-In was cancelled"
+        case .appleSignInFailed:
+            return "Apple Sign-In failed"
+        case .appleSignInNotAvailable:
+            return "Apple Sign-In is not available"
+        case .appleSignInInvalidResponse:
+            return "Invalid response from Apple Sign-In"
+            
+        // Password reset errors
+        case .passwordResetFailed:
+            return "Password reset failed"
+        case .passwordResetExpired:
+            return "Password reset link has expired"
+        case .passwordResetInvalidToken:
+            return "Invalid password reset token"
+        case .passwordResetTooFrequent:
+            return "Password reset requested too frequently"
+            
+        // Account management errors
+        case .accountDeletionFailed:
+            return "Failed to delete account"
+        case .accountUpdateFailed:
+            return "Failed to update account"
+        case .profileUpdateFailed:
+            return "Failed to update profile"
+        case .imageUploadFailed:
+            return "Failed to upload image"
+            
+        // Generic errors
         case .unknown(let message):
             return message
+        case .unexpectedError:
+            return "An unexpected error occurred"
         }
     }
     
+    // MARK: - Recovery Suggestions
+    
     var recoverySuggestion: String? {
         switch self {
+        // Network-related errors
+        case .networkUnavailable:
+            return "Please check your internet connection and try again"
+        case .networkTimeout:
+            return "Check your connection speed and try again"
+        case .networkConnectionFailed:
+            return "Verify your internet connection and try again"
+        case .networkSlowConnection:
+            return "Try again when you have a better connection"
+            
+        // Authentication errors
         case .invalidCredentials:
             return "Please check your email and password and try again"
         case .userNotFound:
-            return "Please sign up for an account"
+            return "Please sign up for an account or check your email address"
         case .emailAlreadyExists:
-            return "Please use a different email address"
+            return "Please use a different email address or try signing in"
         case .weakPassword:
-            return "Please use a stronger password with at least 8 characters"
-        case .networkError:
-            return "Please check your internet connection and try again"
+            return "Please use a stronger password with at least 8 characters, including numbers and symbols"
+        case .accountLocked:
+            return "Please wait 15 minutes before trying again, or contact support"
+        case .accountDisabled:
+            return "Please contact support to reactivate your account"
+        case .emailNotVerified:
+            return "Please check your email and click the verification link"
+        case .tooManyAttempts:
+            return "Please wait 30 minutes before trying again"
+        case .passwordExpired:
+            return "Please reset your password"
+        case .invalidEmailFormat:
+            return "Please enter a valid email address (e.g., user@example.com)"
+        case .passwordTooCommon:
+            return "Please choose a unique password that's not commonly used"
+            
+        // Session errors
+        case .sessionExpired:
+            return "Please sign in again"
+        case .sessionInvalid:
+            return "Please sign out and sign in again"
+        case .refreshTokenExpired:
+            return "Please sign in again"
+        case .sessionNotFound:
+            return "Please sign in to continue"
+        case .sessionCorrupted:
+            return "Please sign out and sign in again"
+            
+        // Server errors
+        case .serverError:
+            return "Please try again in a few minutes"
+        case .serviceUnavailable:
+            return "Please try again later"
+        case .rateLimitExceeded:
+            return "Please wait a few minutes before trying again"
+        case .serverMaintenance:
+            return "Please try again after maintenance is complete"
+        case .serverOverloaded:
+            return "Please try again in a few minutes"
+            
+        // Client errors
+        case .invalidInput:
+            return "Please check your input and try again"
+        case .missingRequiredField:
+            return "Please fill in all required fields"
+        case .validationFailed:
+            return "Please check your input and try again"
+        case .invalidToken:
+            return "Please sign in again"
+        case .tokenExpired:
+            return "Please sign in again"
+            
+        // System errors
+        case .keychainError:
+            return "Please restart the app and try again"
+        case .storageError:
+            return "Please try again or contact support"
+        case .biometricError:
+            return "Please use your password instead"
+        case .deviceNotSupported:
+            return "Please use a supported device"
+        case .permissionDenied:
+            return "Please enable the required permissions in Settings"
+            
+        // Apple Sign-In specific errors
+        case .appleSignInCancelled:
+            return "Please try signing in again"
+        case .appleSignInFailed:
+            return "Please try again or use email/password sign in"
+        case .appleSignInNotAvailable:
+            return "Please use email/password sign in instead"
+        case .appleSignInInvalidResponse:
+            return "Please try again or contact support"
+            
+        // Password reset errors
+        case .passwordResetFailed:
+            return "Please try requesting a new password reset"
+        case .passwordResetExpired:
+            return "Please request a new password reset"
+        case .passwordResetInvalidToken:
+            return "Please request a new password reset"
+        case .passwordResetTooFrequent:
+            return "Please wait before requesting another password reset"
+            
+        // Account management errors
+        case .accountDeletionFailed:
+            return "Please try again or contact support"
+        case .accountUpdateFailed:
+            return "Please try again or contact support"
+        case .profileUpdateFailed:
+            return "Please try again or contact support"
+        case .imageUploadFailed:
+            return "Please try uploading the image again"
+            
+        // Generic errors
         case .unknown:
             return "Please try again or contact support"
+        case .unexpectedError:
+            return "Please restart the app and try again"
         }
+    }
+    
+    // MARK: - Error Severity
+    
+    var severity: ErrorSeverity {
+        switch self {
+        case .networkUnavailable, .networkTimeout, .networkConnectionFailed, .networkSlowConnection:
+            return .warning
+        case .invalidCredentials, .userNotFound, .emailAlreadyExists, .weakPassword, .invalidEmailFormat, .passwordTooCommon:
+            return .warning
+        case .accountLocked, .accountDisabled, .emailNotVerified, .tooManyAttempts, .passwordExpired:
+            return .error
+        case .sessionExpired, .sessionInvalid, .refreshTokenExpired, .sessionNotFound, .sessionCorrupted:
+            return .error
+        case .serverError, .serviceUnavailable, .rateLimitExceeded, .serverMaintenance, .serverOverloaded:
+            return .error
+        case .invalidInput, .missingRequiredField, .validationFailed, .invalidToken, .tokenExpired:
+            return .warning
+        case .keychainError, .storageError, .biometricError, .deviceNotSupported, .permissionDenied:
+            return .error
+        case .appleSignInCancelled, .appleSignInFailed, .appleSignInNotAvailable, .appleSignInInvalidResponse:
+            return .warning
+        case .passwordResetFailed, .passwordResetExpired, .passwordResetInvalidToken, .passwordResetTooFrequent:
+            return .error
+        case .accountDeletionFailed, .accountUpdateFailed, .profileUpdateFailed, .imageUploadFailed:
+            return .error
+        case .unknown, .unexpectedError:
+            return .error
+        }
+    }
+    
+    // MARK: - Retry Capability
+    
+    var canRetry: Bool {
+        switch self {
+        case .networkUnavailable, .networkTimeout, .networkConnectionFailed, .networkSlowConnection:
+            return true
+        case .serverError, .serviceUnavailable, .serverOverloaded:
+            return true
+        case .rateLimitExceeded:
+            return true
+        case .storageError, .imageUploadFailed:
+            return true
+        case .appleSignInFailed, .appleSignInInvalidResponse:
+            return true
+        case .passwordResetFailed:
+            return true
+        case .accountUpdateFailed, .profileUpdateFailed:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    // MARK: - Error Code
+    
+    var errorCode: String {
+        switch self {
+        case .networkUnavailable: return "NETWORK_UNAVAILABLE"
+        case .networkTimeout: return "NETWORK_TIMEOUT"
+        case .networkConnectionFailed: return "NETWORK_CONNECTION_FAILED"
+        case .networkSlowConnection: return "NETWORK_SLOW_CONNECTION"
+        case .invalidCredentials: return "INVALID_CREDENTIALS"
+        case .userNotFound: return "USER_NOT_FOUND"
+        case .emailAlreadyExists: return "EMAIL_ALREADY_EXISTS"
+        case .weakPassword: return "WEAK_PASSWORD"
+        case .accountLocked: return "ACCOUNT_LOCKED"
+        case .accountDisabled: return "ACCOUNT_DISABLED"
+        case .emailNotVerified: return "EMAIL_NOT_VERIFIED"
+        case .tooManyAttempts: return "TOO_MANY_ATTEMPTS"
+        case .passwordExpired: return "PASSWORD_EXPIRED"
+        case .invalidEmailFormat: return "INVALID_EMAIL_FORMAT"
+        case .passwordTooCommon: return "PASSWORD_TOO_COMMON"
+        case .sessionExpired: return "SESSION_EXPIRED"
+        case .sessionInvalid: return "SESSION_INVALID"
+        case .refreshTokenExpired: return "REFRESH_TOKEN_EXPIRED"
+        case .sessionNotFound: return "SESSION_NOT_FOUND"
+        case .sessionCorrupted: return "SESSION_CORRUPTED"
+        case .serverError(let code): return "SERVER_ERROR_\(code)"
+        case .serviceUnavailable: return "SERVICE_UNAVAILABLE"
+        case .rateLimitExceeded: return "RATE_LIMIT_EXCEEDED"
+        case .serverMaintenance: return "SERVER_MAINTENANCE"
+        case .serverOverloaded: return "SERVER_OVERLOADED"
+        case .invalidInput(let field): return "INVALID_INPUT_\(field.uppercased())"
+        case .missingRequiredField(let field): return "MISSING_REQUIRED_FIELD_\(field.uppercased())"
+        case .validationFailed(let reason): return "VALIDATION_FAILED_\(reason.uppercased())"
+        case .invalidToken: return "INVALID_TOKEN"
+        case .tokenExpired: return "TOKEN_EXPIRED"
+        case .keychainError: return "KEYCHAIN_ERROR"
+        case .storageError: return "STORAGE_ERROR"
+        case .biometricError: return "BIOMETRIC_ERROR"
+        case .deviceNotSupported: return "DEVICE_NOT_SUPPORTED"
+        case .permissionDenied: return "PERMISSION_DENIED"
+        case .appleSignInCancelled: return "APPLE_SIGN_IN_CANCELLED"
+        case .appleSignInFailed: return "APPLE_SIGN_IN_FAILED"
+        case .appleSignInNotAvailable: return "APPLE_SIGN_IN_NOT_AVAILABLE"
+        case .appleSignInInvalidResponse: return "APPLE_SIGN_IN_INVALID_RESPONSE"
+        case .passwordResetFailed: return "PASSWORD_RESET_FAILED"
+        case .passwordResetExpired: return "PASSWORD_RESET_EXPIRED"
+        case .passwordResetInvalidToken: return "PASSWORD_RESET_INVALID_TOKEN"
+        case .passwordResetTooFrequent: return "PASSWORD_RESET_TOO_FREQUENT"
+        case .accountDeletionFailed: return "ACCOUNT_DELETION_FAILED"
+        case .accountUpdateFailed: return "ACCOUNT_UPDATE_FAILED"
+        case .profileUpdateFailed: return "PROFILE_UPDATE_FAILED"
+        case .imageUploadFailed: return "IMAGE_UPLOAD_FAILED"
+        case .unknown(let message): return "UNKNOWN_\(message.hashValue)"
+        case .unexpectedError: return "UNEXPECTED_ERROR"
+        }
+    }
+    
+    // MARK: - Context Information
+    
+    var contextInfo: [String: Any] {
+        var context: [String: Any] = [
+            "errorCode": errorCode,
+            "severity": severity,
+            "canRetry": canRetry,
+            "timestamp": Date().timeIntervalSince1970
+        ]
+        
+        switch self {
+        case .serverError(let code):
+            context["serverCode"] = code
+        case .invalidInput(let field):
+            context["field"] = field
+        case .missingRequiredField(let field):
+            context["field"] = field
+        case .validationFailed(let reason):
+            context["reason"] = reason
+        case .unknown(let message):
+            context["message"] = message
+        default:
+            break
+        }
+        
+        return context
     }
 }

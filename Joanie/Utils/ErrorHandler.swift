@@ -130,60 +130,408 @@ enum ErrorSeverity {
     }
 }
 
-// MARK: - Error View
+// MARK: - Enhanced Error View
 
-struct ErrorView: View {
-    let error: AppError
+struct EnhancedErrorView: View {
+    let error: AuthenticationError
     let onRetry: (() -> Void)?
     let onDismiss: () -> Void
+    let onRecoveryAction: (() -> Void)?
     
-    init(error: AppError, onRetry: (() -> Void)? = nil, onDismiss: @escaping () -> Void) {
+    @State private var isRetrying = false
+    
+    init(error: AuthenticationError, onRetry: (() -> Void)? = nil, onDismiss: @escaping () -> Void, onRecoveryAction: (() -> Void)? = nil) {
         self.error = error
         self.onRetry = onRetry
         self.onDismiss = onDismiss
+        self.onRecoveryAction = onRecoveryAction
     }
     
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 20) {
+            // Error Icon
             Image(systemName: error.severity.icon)
-                .font(.system(size: 48))
+                .font(.system(size: 60))
                 .foregroundColor(error.severity.color)
             
-            Text("Oops! Something went wrong")
+            // Error Title
+            Text(errorTitle)
                 .font(.title2)
                 .fontWeight(.semibold)
+                .multilineTextAlignment(.center)
             
+            // Error Description
             Text(error.localizedDescription)
                 .font(.body)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.secondary)
+                .padding(.horizontal)
             
+            // Recovery Suggestion
             if let recoverySuggestion = error.recoverySuggestion {
                 Text(recoverySuggestion)
                     .font(.caption)
                     .multilineTextAlignment(.center)
                     .foregroundColor(.secondary)
                     .padding(.horizontal)
+                    .padding(.top, 8)
             }
             
-            HStack(spacing: 12) {
+            // Action Buttons
+            VStack(spacing: 12) {
+                // Retry Button
                 if error.canRetry, let onRetry = onRetry {
-                    Button("Try Again") {
+                    Button(action: {
+                        isRetrying = true
                         onRetry()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                            isRetrying = false
+                        }
+                    }) {
+                        HStack {
+                            if isRetrying {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                            } else {
+                                Image(systemName: "arrow.clockwise")
+                            }
+                            Text(isRetrying ? "Retrying..." : "Try Again")
+                        }
                     }
                     .buttonStyle(.borderedProminent)
+                    .disabled(isRetrying)
                 }
                 
+                // Recovery Action Button
+                if let onRecoveryAction = onRecoveryAction {
+                    Button(action: onRecoveryAction) {
+                        HStack {
+                            Image(systemName: recoveryActionIcon)
+                            Text(recoveryActionTitle)
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                }
+                
+                // Dismiss Button
                 Button("Dismiss") {
                     onDismiss()
                 }
                 .buttonStyle(.bordered)
+                .foregroundColor(.secondary)
             }
         }
-        .padding()
+        .padding(24)
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
+        .shadow(radius: 12)
+        .padding(.horizontal, 20)
+    }
+    
+    private var errorTitle: String {
+        switch error.severity {
+        case .warning:
+            return "Something went wrong"
+        case .error:
+            return "Error occurred"
+        case .critical:
+            return "Critical error"
+        case .info:
+            return "Information"
+        }
+    }
+    
+    private var recoveryActionIcon: String {
+        switch error {
+        case .networkUnavailable, .networkTimeout, .networkConnectionFailed, .networkSlowConnection:
+            return "wifi"
+        case .invalidCredentials, .userNotFound:
+            return "person.badge.key"
+        case .emailAlreadyExists:
+            return "envelope"
+        case .weakPassword, .passwordTooCommon:
+            return "key"
+        case .accountLocked, .accountDisabled:
+            return "lock"
+        case .emailNotVerified:
+            return "envelope.badge"
+        case .sessionExpired, .sessionInvalid, .refreshTokenExpired:
+            return "arrow.clockwise.circle"
+        case .serverError, .serviceUnavailable, .serverOverloaded:
+            return "server.rack"
+        case .rateLimitExceeded:
+            return "clock"
+        case .keychainError, .storageError:
+            return "externaldrive"
+        case .biometricError:
+            return "faceid"
+        case .permissionDenied:
+            return "hand.raised"
+        case .appleSignInCancelled, .appleSignInFailed:
+            return "applelogo"
+        case .passwordResetFailed, .passwordResetExpired:
+            return "key.horizontal"
+        default:
+            return "questionmark.circle"
+        }
+    }
+    
+    private var recoveryActionTitle: String {
+        switch error {
+        case .networkUnavailable, .networkTimeout, .networkConnectionFailed, .networkSlowConnection:
+            return "Check Connection"
+        case .invalidCredentials, .userNotFound:
+            return "Reset Password"
+        case .emailAlreadyExists:
+            return "Sign In Instead"
+        case .weakPassword, .passwordTooCommon:
+            return "Use Stronger Password"
+        case .accountLocked, .accountDisabled:
+            return "Contact Support"
+        case .emailNotVerified:
+            return "Resend Verification"
+        case .sessionExpired, .sessionInvalid, .refreshTokenExpired:
+            return "Sign In Again"
+        case .serverError, .serviceUnavailable, .serverOverloaded:
+            return "Try Later"
+        case .rateLimitExceeded:
+            return "Wait and Retry"
+        case .keychainError, .storageError:
+            return "Restart App"
+        case .biometricError:
+            return "Use Password"
+        case .permissionDenied:
+            return "Enable Permissions"
+        case .appleSignInCancelled, .appleSignInFailed:
+            return "Use Email Sign In"
+        case .passwordResetFailed, .passwordResetExpired:
+            return "Request New Reset"
+        default:
+            return "Get Help"
+        }
+    }
+}
+
+// MARK: - Authentication Error Alert
+
+struct AuthenticationErrorAlert: ViewModifier {
+    @Binding var error: AuthenticationError?
+    let onRetry: (() -> Void)?
+    let onRecoveryAction: (() -> Void)?
+    
+    func body(content: Content) -> some View {
+        content
+            .alert("Authentication Error", isPresented: .constant(error != nil)) {
+                if let error = error {
+                    if error.canRetry, let onRetry = onRetry {
+                        Button("Try Again") {
+                            onRetry()
+                            self.error = nil
+                        }
+                    }
+                    
+                    if onRecoveryAction != nil {
+                        Button(recoveryActionTitle(for: error)) {
+                            onRecoveryAction?()
+                            self.error = nil
+                        }
+                    }
+                    
+                    Button("OK") {
+                        self.error = nil
+                    }
+                }
+            } message: {
+                if let error = error {
+                    Text(error.localizedDescription)
+                }
+            }
+    }
+    
+    private func recoveryActionTitle(for error: AuthenticationError) -> String {
+        switch error {
+        case .networkUnavailable, .networkTimeout, .networkConnectionFailed:
+            return "Check Connection"
+        case .invalidCredentials, .userNotFound:
+            return "Reset Password"
+        case .emailAlreadyExists:
+            return "Sign In Instead"
+        case .sessionExpired, .sessionInvalid:
+            return "Sign In Again"
+        case .serverError, .serviceUnavailable:
+            return "Try Later"
+        case .rateLimitExceeded:
+            return "Wait and Retry"
+        default:
+            return "Get Help"
+        }
+    }
+}
+
+extension View {
+    func authenticationErrorAlert(
+        _ error: Binding<AuthenticationError?>,
+        onRetry: (() -> Void)? = nil,
+        onRecoveryAction: (() -> Void)? = nil
+    ) -> some View {
+        self.modifier(AuthenticationErrorAlert(
+            error: error,
+            onRetry: onRetry,
+            onRecoveryAction: onRecoveryAction
+        ))
+    }
+}
+
+// MARK: - Error Toast
+
+struct ErrorToast: View {
+    let error: AuthenticationError
+    let onDismiss: () -> Void
+    
+    @State private var isVisible = false
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: error.severity.icon)
+                .foregroundColor(error.severity.color)
+                .font(.system(size: 16))
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(error.localizedDescription)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+                
+                if let recoverySuggestion = error.recoverySuggestion {
+                    Text(recoverySuggestion)
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            Spacer()
+            
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
         .background(Color(.systemBackground))
         .cornerRadius(12)
         .shadow(radius: 8)
+        .padding(.horizontal, 16)
+        .offset(y: isVisible ? 0 : -100)
+        .onAppear {
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                isVisible = true
+            }
+            
+            // Auto-dismiss after 5 seconds
+            DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                dismiss()
+            }
+        }
+    }
+    
+    private func dismiss() {
+        withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+            isVisible = false
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            onDismiss()
+        }
+    }
+}
+
+// MARK: - Error Toast Container
+
+struct ErrorToastContainer: ViewModifier {
+    @Binding var error: AuthenticationError?
+    let onDismiss: () -> Void
+    
+    func body(content: Content) -> some View {
+        ZStack {
+            content
+            
+            if let error = error {
+                VStack {
+                    ErrorToast(error: error, onDismiss: onDismiss)
+                    Spacer()
+                }
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+    }
+}
+
+extension View {
+    func errorToast(_ error: Binding<AuthenticationError?>, onDismiss: @escaping () -> Void) -> some View {
+        self.modifier(ErrorToastContainer(error: error, onDismiss: onDismiss))
+    }
+}
+
+// MARK: - Error Recovery Actions
+
+class ErrorRecoveryActions {
+    static let shared = ErrorRecoveryActions()
+    
+    private init() {}
+    
+    func handleRecoveryAction(for error: AuthenticationError, in viewModel: AuthenticationViewModel) {
+        switch error {
+        case .networkUnavailable, .networkTimeout, .networkConnectionFailed, .networkSlowConnection:
+            // Network errors - could open settings or show network status
+            break
+            
+        case .invalidCredentials, .userNotFound:
+            // Show password reset flow
+            break
+            
+        case .emailAlreadyExists:
+            // Navigate to sign in
+            break
+            
+        case .sessionExpired, .sessionInvalid, .refreshTokenExpired:
+            // Force re-authentication
+            Task {
+                await viewModel.signOut()
+            }
+            
+        case .serverError, .serviceUnavailable, .serverOverloaded:
+            // Show server status or retry later
+            break
+            
+        case .rateLimitExceeded:
+            // Show countdown timer
+            break
+            
+        case .keychainError, .storageError:
+            // Suggest app restart
+            break
+            
+        case .biometricError:
+            // Fallback to password
+            break
+            
+        case .permissionDenied:
+            // Open app settings
+            break
+            
+        case .appleSignInCancelled, .appleSignInFailed:
+            // Fallback to email/password
+            break
+            
+        case .passwordResetFailed, .passwordResetExpired:
+            // Show password reset form
+            break
+            
+        default:
+            break
+        }
     }
 }
 
