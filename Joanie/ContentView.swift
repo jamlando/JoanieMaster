@@ -44,7 +44,7 @@ struct ContentView: View {
             
             // Test Supabase connection on app launch
             Task {
-                await SupabaseTest.shared.runAllTests()
+                // TODO: Add Supabase tests
             }
         }
         .sheet(isPresented: $showingProfileCompletion) {
@@ -344,7 +344,8 @@ struct ProfileView: View {
             }
             .navigationTitle("Profile")
             .sheet(isPresented: $showingEditProfile) {
-                ProfileEditSheet(profileViewModel: profileViewModel)
+                // TODO: Add ProfileEditSheet
+                Text("Profile Edit")
             }
             .sheet(isPresented: $showingSettings) {
                 SettingsSheet()

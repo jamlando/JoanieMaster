@@ -94,7 +94,7 @@ class ProfileViewModel: ObservableObject {
         }
         
         do {
-            children = try await supabaseService.getChildren(for: currentUser.id)
+            children = try await supabaseService.getChildren()
             appState.children = children
         } catch {
             errorMessage = error.localizedDescription
@@ -152,7 +152,7 @@ class ProfileViewModel: ObservableObject {
                 avatarURL: avatarURL
             )
             
-            let createdChild = try await supabaseService.createChild(name: newChild.name, birthDate: newChild.birthDate)
+            let createdChild = try await supabaseService.createChild(newChild)
             children.append(createdChild)
             appState.addChild(createdChild)
             

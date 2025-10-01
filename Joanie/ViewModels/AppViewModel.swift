@@ -58,20 +58,15 @@ class AppViewModel: ObservableObject {
                 }
             } catch {
                 // Session check failed, user needs to sign in
-                Logger.shared.logError("Session check failed: \(error)")
+                Logger.shared.error("Session check failed: \(error)")
             }
             isLoading = false
         }
     }
     
     private func loadUserProfile() async {
-        do {
-            // Load user profile from the authenticated session
-            let userProfile = try await authService.getCurrentUserProfile()
-            currentUser = userProfile
-        } catch {
-            Logger.shared.logError("Failed to load user profile: \(error)")
-        }
+        // Load user profile from the authenticated session
+        currentUser = authService.currentUser
     }
     
     func signOut() async {
@@ -109,12 +104,12 @@ class AppViewModel: ObservableObject {
             if isAuthenticated {
                 // Session is valid, load user profile
                 await loadUserProfile()
-                Logger.shared.logInfo("Session restored successfully for user: \(currentUser?.email ?? "unknown")")
+                Logger.shared.info("Session restored successfully for user: \(currentUser?.email ?? "unknown")")
             } else {
-                Logger.shared.logInfo("No valid session found, user needs to sign in")
+                Logger.shared.info("No valid session found, user needs to sign in")
             }
         } catch {
-            Logger.shared.logError("Session restoration failed: \(error)")
+            Logger.shared.error("Session restoration failed: \(error)")
         }
         
         isLoading = false
@@ -123,7 +118,7 @@ class AppViewModel: ObservableObject {
     /// Check if user should be automatically logged in
     var shouldAutoLogin: Bool {
         // Check if we have a valid session in keychain
-        return KeychainService.shared.isSessionValid()
+        return KeychainService.shared.hasValidSession()
     }
     
     // MARK: - Computed Properties

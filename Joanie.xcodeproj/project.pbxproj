@@ -44,6 +44,15 @@
 		A123456789012345678906A /* ValidationUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A123456789012345678906B /* ValidationUtils.swift */; };
 		A123456789012345678906C /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A123456789012345678906D /* KeychainService.swift */; };
 		A123456789012345678906E /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = A123456789012345678906F /* Secrets.swift */; };
+		A123456789012345678907A /* ErrorAnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A123456789012345678907B /* ErrorAnalyticsService.swift */; };
+		A123456789012345678907C /* ErrorHandlingTestSuite.swift in Sources */ = {isa = PBXBuildFile; fileRef = A123456789012345678907D /* ErrorHandlingTestSuite.swift */; };
+		A123456789012345678907E /* ErrorRecoveryFlowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A123456789012345678907F /* ErrorRecoveryFlowManager.swift */; };
+		A123456789012345678908A /* OfflineErrorQueueManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A123456789012345678908B /* OfflineErrorQueueManager.swift */; };
+		A123456789012345678908C /* RetryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A123456789012345678908D /* RetryService.swift */; };
+		A123456789012345678908E /* SecurityConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A123456789012345678908F /* SecurityConfig.swift */; };
+		A123456789012345678909A /* SupabaseTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = A123456789012345678909B /* SupabaseTest.swift */; };
+		A123456789012345678909C /* UploadRetryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A123456789012345678909D /* UploadRetryManager.swift */; };
+		A123456789012345678909E /* UploadTestSuite.swift in Sources */ = {isa = PBXBuildFile; fileRef = A123456789012345678909F /* UploadTestSuite.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -53,39 +62,48 @@
 		A1234567890123456789013B /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		A1234567890123456789013C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A1234567890123456789013E /* Joanie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Joanie.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		A1234567890123456789014B /* DependencyContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Utils/DependencyContainer.swift"; sourceTree = "<group>"; };
-		A1234567890123456789014D /* AppViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewModels/AppViewModel.swift"; sourceTree = "<group>"; };
-		A1234567890123456789014F /* AuthenticationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewModels/AuthenticationViewModel.swift"; sourceTree = "<group>"; };
-		A1234567890123456789015B /* GalleryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewModels/GalleryViewModel.swift"; sourceTree = "<group>"; };
-		A1234567890123456789015D /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewModels/HomeViewModel.swift"; sourceTree = "<group>"; };
-		A1234567890123456789015F /* ProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewModels/ProfileViewModel.swift"; sourceTree = "<group>"; };
-		A1234567890123456789016B /* TimelineViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewModels/TimelineViewModel.swift"; sourceTree = "<group>"; };
-		A1234567890123456789016D /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/LoginView.swift"; sourceTree = "<group>"; };
-		A1234567890123456789016F /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/RegisterView.swift"; sourceTree = "<group>"; };
-		A1234567890123456789017B /* ForgotPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/ForgotPasswordView.swift"; sourceTree = "<group>"; };
-		A1234567890123456789017D /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/ImagePicker.swift"; sourceTree = "<group>"; };
-		A1234567890123456789017F /* PhotoCaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/PhotoCaptureView.swift"; sourceTree = "<group>"; };
-		A1234567890123456789018B /* PhotoLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/PhotoLibraryView.swift"; sourceTree = "<group>"; };
-		A1234567890123456789018D /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/AppState.swift"; sourceTree = "<group>"; };
-		A1234567890123456789018F /* ArtworkUpload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/ArtworkUpload.swift"; sourceTree = "<group>"; };
-		A1234567890123456789019B /* Child.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/Child.swift"; sourceTree = "<group>"; };
-		A1234567890123456789019D /* ProgressEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/ProgressEntry.swift"; sourceTree = "<group>"; };
-		A1234567890123456789019F /* Story.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/Story.swift"; sourceTree = "<group>"; };
-		A123456789012345678902B /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/UserProfile.swift"; sourceTree = "<group>"; };
-		A123456789012345678902D /* COPPACompliance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/COPPACompliance.swift"; sourceTree = "<group>"; };
-		A123456789012345678902F /* AIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/AIService.swift"; sourceTree = "<group>"; };
-		A123456789012345678903B /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/AuthService.swift"; sourceTree = "<group>"; };
-		A123456789012345678903D /* StorageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/StorageService.swift"; sourceTree = "<group>"; };
-		A123456789012345678903F /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/SupabaseService.swift"; sourceTree = "<group>"; };
-		A123456789012345678904B /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Utils/Config.swift"; sourceTree = "<group>"; };
-		A123456789012345678904D /* CoreDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Utils/CoreDataManager.swift"; sourceTree = "<group>"; };
-		A123456789012345678904F /* DateFormatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Utils/DateFormatters.swift"; sourceTree = "<group>"; };
-		A123456789012345678905B /* ErrorHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Utils/ErrorHandler.swift"; sourceTree = "<group>"; };
-		A123456789012345678905D /* ImageProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Utils/ImageProcessor.swift"; sourceTree = "<group>"; };
-		A123456789012345678905F /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Utils/Logger.swift"; sourceTree = "<group>"; };
-		A123456789012345678906B /* ValidationUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Utils/ValidationUtils.swift"; sourceTree = "<group>"; };
-		A123456789012345678906D /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Utils/KeychainService.swift"; sourceTree = "<group>"; };
-		A123456789012345678906F /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Config/Secrets.swift"; sourceTree = "<group>"; };
+		A1234567890123456789014B /* DependencyContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Utils/DependencyContainer.swift"; sourceTree = SOURCE_ROOT; };
+		A1234567890123456789014D /* AppViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/ViewModels/AppViewModel.swift"; sourceTree = SOURCE_ROOT; };
+		A1234567890123456789014F /* AuthenticationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/ViewModels/AuthenticationViewModel.swift"; sourceTree = SOURCE_ROOT; };
+		A1234567890123456789015B /* GalleryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/ViewModels/GalleryViewModel.swift"; sourceTree = SOURCE_ROOT; };
+		A1234567890123456789015D /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/ViewModels/HomeViewModel.swift"; sourceTree = SOURCE_ROOT; };
+		A1234567890123456789015F /* ProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/ViewModels/ProfileViewModel.swift"; sourceTree = SOURCE_ROOT; };
+		A1234567890123456789016B /* TimelineViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/ViewModels/TimelineViewModel.swift"; sourceTree = SOURCE_ROOT; };
+		A1234567890123456789016D /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Views/LoginView.swift"; sourceTree = SOURCE_ROOT; };
+		A1234567890123456789016F /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Views/RegisterView.swift"; sourceTree = SOURCE_ROOT; };
+		A1234567890123456789017B /* ForgotPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Views/ForgotPasswordView.swift"; sourceTree = SOURCE_ROOT; };
+		A1234567890123456789017D /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Views/ImagePicker.swift"; sourceTree = SOURCE_ROOT; };
+		A1234567890123456789017F /* PhotoCaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Views/PhotoCaptureView.swift"; sourceTree = SOURCE_ROOT; };
+		A1234567890123456789018B /* PhotoLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Views/PhotoLibraryView.swift"; sourceTree = SOURCE_ROOT; };
+		A1234567890123456789018D /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Models/AppState.swift"; sourceTree = SOURCE_ROOT; };
+		A1234567890123456789018F /* ArtworkUpload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Models/ArtworkUpload.swift"; sourceTree = SOURCE_ROOT; };
+		A1234567890123456789019B /* Child.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Models/Child.swift"; sourceTree = SOURCE_ROOT; };
+		A1234567890123456789019D /* ProgressEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Models/ProgressEntry.swift"; sourceTree = SOURCE_ROOT; };
+		A1234567890123456789019F /* Story.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Models/Story.swift"; sourceTree = SOURCE_ROOT; };
+		A123456789012345678902B /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Models/UserProfile.swift"; sourceTree = SOURCE_ROOT; };
+		A123456789012345678902D /* COPPACompliance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Models/COPPACompliance.swift"; sourceTree = SOURCE_ROOT; };
+		A123456789012345678902F /* AIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Services/AIService.swift"; sourceTree = SOURCE_ROOT; };
+		A123456789012345678903B /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Services/AuthService.swift"; sourceTree = SOURCE_ROOT; };
+		A123456789012345678903D /* StorageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Services/StorageService.swift"; sourceTree = SOURCE_ROOT; };
+		A123456789012345678903F /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Services/SupabaseService.swift"; sourceTree = SOURCE_ROOT; };
+		A123456789012345678904B /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Utils/Config.swift"; sourceTree = SOURCE_ROOT; };
+		A123456789012345678904D /* CoreDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Utils/CoreDataManager.swift"; sourceTree = SOURCE_ROOT; };
+		A123456789012345678904F /* DateFormatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Utils/DateFormatters.swift"; sourceTree = SOURCE_ROOT; };
+		A123456789012345678905B /* ErrorHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Utils/ErrorHandler.swift"; sourceTree = SOURCE_ROOT; };
+		A123456789012345678905D /* ImageProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Utils/ImageProcessor.swift"; sourceTree = SOURCE_ROOT; };
+		A123456789012345678905F /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Utils/Logger.swift"; sourceTree = SOURCE_ROOT; };
+		A123456789012345678906B /* ValidationUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Utils/ValidationUtils.swift"; sourceTree = SOURCE_ROOT; };
+		A123456789012345678906D /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Utils/KeychainService.swift"; sourceTree = SOURCE_ROOT; };
+		A123456789012345678906F /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Config/Secrets.swift"; sourceTree = SOURCE_ROOT; };
+		A123456789012345678907B /* ErrorAnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Utils/ErrorAnalyticsService.swift"; sourceTree = SOURCE_ROOT; };
+		A123456789012345678907D /* ErrorHandlingTestSuite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Utils/ErrorHandlingTestSuite.swift"; sourceTree = SOURCE_ROOT; };
+		A123456789012345678907F /* ErrorRecoveryFlowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Utils/ErrorRecoveryFlowManager.swift"; sourceTree = SOURCE_ROOT; };
+		A123456789012345678908B /* OfflineErrorQueueManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Utils/OfflineErrorQueueManager.swift"; sourceTree = SOURCE_ROOT; };
+		A123456789012345678908D /* RetryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Utils/RetryService.swift"; sourceTree = SOURCE_ROOT; };
+		A123456789012345678908F /* SecurityConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Utils/SecurityConfig.swift"; sourceTree = SOURCE_ROOT; };
+		A123456789012345678909B /* SupabaseTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Utils/SupabaseTest.swift"; sourceTree = SOURCE_ROOT; };
+		A123456789012345678909D /* UploadRetryManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Utils/UploadRetryManager.swift"; sourceTree = SOURCE_ROOT; };
+		A123456789012345678909F /* UploadTestSuite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Joanie/Utils/UploadTestSuite.swift"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -208,6 +226,26 @@
 				A1234567890123456789012C /* ContentView.swift in Sources */,
 				A1234567890123456789012A /* JoanieApp.swift in Sources */,
 				A1234567890123456789014A /* DependencyContainer.swift in Sources */,
+				A1234567890123456789018C /* AppState.swift in Sources */,
+				A1234567890123456789018E /* ArtworkUpload.swift in Sources */,
+				A1234567890123456789019A /* Child.swift in Sources */,
+				A1234567890123456789019C /* ProgressEntry.swift in Sources */,
+				A1234567890123456789019E /* Story.swift in Sources */,
+				A123456789012345678902A /* UserProfile.swift in Sources */,
+				A123456789012345678902C /* COPPACompliance.swift in Sources */,
+				A123456789012345678904A /* Config.swift in Sources */,
+				A123456789012345678904C /* CoreDataManager.swift in Sources */,
+				A123456789012345678904E /* DateFormatters.swift in Sources */,
+				A123456789012345678905A /* ErrorHandler.swift in Sources */,
+				A123456789012345678905C /* ImageProcessor.swift in Sources */,
+				A123456789012345678905E /* Logger.swift in Sources */,
+				A123456789012345678906A /* ValidationUtils.swift in Sources */,
+				A123456789012345678906C /* KeychainService.swift in Sources */,
+				A123456789012345678906E /* Secrets.swift in Sources */,
+				A123456789012345678903E /* SupabaseService.swift in Sources */,
+				A123456789012345678902E /* AIService.swift in Sources */,
+				A123456789012345678903A /* AuthService.swift in Sources */,
+				A123456789012345678903C /* StorageService.swift in Sources */,
 				A1234567890123456789014C /* AppViewModel.swift in Sources */,
 				A1234567890123456789014E /* AuthenticationViewModel.swift in Sources */,
 				A1234567890123456789015A /* GalleryViewModel.swift in Sources */,
@@ -220,26 +258,6 @@
 				A1234567890123456789017C /* ImagePicker.swift in Sources */,
 				A1234567890123456789017E /* PhotoCaptureView.swift in Sources */,
 				A1234567890123456789018A /* PhotoLibraryView.swift in Sources */,
-				A1234567890123456789018C /* AppState.swift in Sources */,
-				A1234567890123456789018E /* ArtworkUpload.swift in Sources */,
-				A1234567890123456789019A /* Child.swift in Sources */,
-				A1234567890123456789019C /* ProgressEntry.swift in Sources */,
-				A1234567890123456789019E /* Story.swift in Sources */,
-				A123456789012345678902A /* UserProfile.swift in Sources */,
-				A123456789012345678902C /* COPPACompliance.swift in Sources */,
-				A123456789012345678902E /* AIService.swift in Sources */,
-				A123456789012345678903A /* AuthService.swift in Sources */,
-				A123456789012345678903C /* StorageService.swift in Sources */,
-				A123456789012345678903E /* SupabaseService.swift in Sources */,
-				A123456789012345678904A /* Config.swift in Sources */,
-				A123456789012345678904C /* CoreDataManager.swift in Sources */,
-				A123456789012345678904E /* DateFormatters.swift in Sources */,
-				A123456789012345678905A /* ErrorHandler.swift in Sources */,
-				A123456789012345678905C /* ImageProcessor.swift in Sources */,
-				A123456789012345678905E /* Logger.swift in Sources */,
-				A123456789012345678906A /* ValidationUtils.swift in Sources */,
-				A123456789012345678906C /* KeychainService.swift in Sources */,
-				A123456789012345678906E /* Secrets.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

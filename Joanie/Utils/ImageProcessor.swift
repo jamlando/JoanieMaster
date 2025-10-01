@@ -384,10 +384,10 @@ class ImageProcessor: ObservableObject {
     }
     
     private func extractCameraInfo(from exifData: [String: Any]) -> CameraInfo? {
-        let make = exifData[kCGImagePropertyExifMake as String] as? String
-        let model = exifData[kCGImagePropertyExifModel as String] as? String
-        let software = exifData[kCGImagePropertyExifSoftware as String] as? String
-        let lensModel = exifData[kCGImagePropertyExifLensModel as String] as? String
+        let make = exifData["Make"] as? String
+        let model = exifData["Model"] as? String
+        let software = exifData["Software"] as? String
+        let lensModel = exifData["LensModel"] as? String
         
         guard make != nil || model != nil else { return nil }
         
@@ -409,9 +409,9 @@ class ImageProcessor: ObservableObject {
         )
         
         let gpsData = GPSData(
-            latitude: asset.location?.coordinate.latitude,
-            longitude: asset.location?.coordinate.longitude,
-            altitude: asset.location?.altitude,
+            latitude: asset.location?.coordinate.latitude ?? 0.0,
+            longitude: asset.location?.coordinate.longitude ?? 0.0,
+            altitude: asset.location?.altitude ?? 0.0,
             timestamp: asset.location?.timestamp
         )
         
@@ -439,7 +439,7 @@ class ImageProcessor: ObservableObject {
         // Check image dimensions (prevent extremely large images)
         guard let image = UIImage(data: data) else { return false }
         let maxDimension = 4096
-        guard image.size.width <= maxDimension && image.size.height <= maxDimension else { return false }
+        guard image.size.width <= CGFloat(maxDimension) && image.size.height <= CGFloat(maxDimension) else { return false }
         
         return true
     }

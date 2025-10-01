@@ -44,46 +44,20 @@ class AuthService: ObservableObject, ServiceProtocol {
         isLoading = true
         errorMessage = nil
         
-        let result = await RetryService.shared.retryWithAuthErrorHandling(
-            operation: {
-                try await supabaseService.signUp(email: email, password: password, fullName: fullName)
-            },
-            config: .default
-        )
+        let user = try await supabaseService.signUp(email: email, password: password, fullName: fullName)
         
         isLoading = false
-        
-        switch result {
-        case .success(let user):
-            return user
-        case .failure(let error), .maxAttemptsReached(let error):
-            let mappedError = SupabaseErrorMapper.shared.mapSupabaseError(error)
-            errorMessage = mappedError.localizedDescription
-            throw mappedError
-        }
+        return user
     }
     
     func signIn(email: String, password: String) async throws -> UserProfile {
         isLoading = true
         errorMessage = nil
         
-        let result = await RetryService.shared.retryWithAuthErrorHandling(
-            operation: {
-                try await supabaseService.signIn(email: email, password: password)
-            },
-            config: .default
-        )
+        let user = try await supabaseService.signIn(email: email, password: password)
         
         isLoading = false
-        
-        switch result {
-        case .success(let user):
-            return user
-        case .failure(let error), .maxAttemptsReached(let error):
-            let mappedError = SupabaseErrorMapper.shared.mapSupabaseError(error)
-            errorMessage = mappedError.localizedDescription
-            throw mappedError
-        }
+        return user
     }
     
     func signInWithApple() async throws -> UserProfile {
@@ -114,12 +88,12 @@ class AuthService: ObservableObject, ServiceProtocol {
             await clearLocalState()
             
             isLoading = false
-            Logger.shared.logInfo("AuthService: User signed out successfully")
+            Logger.shared.info("AuthService: User signed out successfully")
         } catch {
             isLoading = false
             let mappedError = SupabaseErrorMapper.shared.mapSupabaseError(error)
             errorMessage = mappedError.localizedDescription
-            Logger.shared.logError("AuthService: Sign out failed - \(mappedError)")
+            Logger.shared.error("AuthService: Sign out failed - \(mappedError)")
             throw mappedError
         }
     }
@@ -225,46 +199,18 @@ class AuthService: ObservableObject, ServiceProtocol {
         isLoading = true
         errorMessage = nil
         
-        let result = await RetryService.shared.retryWithAuthErrorHandling(
-            operation: {
-                try await supabaseService.checkSession()
-            },
-            config: .quick
-        )
+        try await supabaseService.checkSession()
         
         isLoading = false
-        
-        switch result {
-        case .success:
-            return
-        case .failure(let error), .maxAttemptsReached(let error):
-            let mappedError = SupabaseErrorMapper.shared.mapSupabaseError(error)
-            errorMessage = mappedError.localizedDescription
-            throw mappedError
-        }
     }
     
     func refreshSession() async throws {
         isLoading = true
         errorMessage = nil
         
-        let result = await RetryService.shared.retryWithAuthErrorHandling(
-            operation: {
-                try await supabaseService.refreshSession()
-            },
-            config: .quick
-        )
+        try await supabaseService.refreshSession()
         
         isLoading = false
-        
-        switch result {
-        case .success:
-            return
-        case .failure(let error), .maxAttemptsReached(let error):
-            let mappedError = SupabaseErrorMapper.shared.mapSupabaseError(error)
-            errorMessage = mappedError.localizedDescription
-            throw mappedError
-        }
     }
     
     // MARK: - ServiceProtocol

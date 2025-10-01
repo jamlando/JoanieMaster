@@ -16,7 +16,7 @@ class StorageService: ObservableObject, ServiceProtocol {
     @Published var uploadProgress: Double = 0.0
     @Published var errorMessage: String?
     @Published var currentUpload: UploadTask?
-    @Published var uploadQueue: [UploadTask] = []
+    @Published var uploadQueue: [QueuedUpload] = []
     @Published var completedUploads: [UploadTask] = []
     @Published var failedUploads: [UploadTask] = []
     
@@ -86,16 +86,26 @@ class StorageService: ObservableObject, ServiceProtocol {
             
             // Step 2: Upload to storage
             uploadTask.status = .uploading
-            let artwork = try await supabaseService.uploadArtwork(
-                childId: childId,
-                title: title,
-                description: description,
-                imageData: optimizedImage.compressed,
-                artworkType: artworkType
+            let artworkUpload = ArtworkUpload(
+                id: uploadTask.id,
+                childId: uploadTask.childId,
+                userId: UUID(), // TODO: Get actual user ID
+                title: uploadTask.title,
+                description: uploadTask.description,
+                artworkType: uploadTask.artworkType,
+                imageURL: "",
+                createdAt: Date(),
+                updatedAt: Date()
             )
+            let artwork = try await supabaseService.uploadArtwork(
+                artworkUpload,
+                imageData: optimizedImage.compressed
+            ) { progress in
+                self.uploadProgress = 0.3 + (progress * 0.7)
+            }
             
             // Step 3: Complete
-            uploadTask.status = .completed
+            uploadTask.status = UploadStatus.completed
             uploadTask.artwork = artwork
             uploadProgress = 1.0
             
@@ -106,7 +116,7 @@ class StorageService: ObservableObject, ServiceProtocol {
             return artwork
             
         } catch {
-            uploadTask.status = .failed
+                uploadTask.status = UploadStatus.failed
             uploadTask.error = error
             uploadProgress = 0.0
             errorMessage = error.localizedDescription
@@ -154,18 +164,26 @@ class StorageService: ObservableObject, ServiceProtocol {
             
             // Step 2: Upload to storage with progress
             uploadTask.status = .uploading
+            let artworkUpload = ArtworkUpload(
+                id: uploadTask.id,
+                childId: uploadTask.childId,
+                userId: UUID(), // TODO: Get actual user ID
+                title: uploadTask.title,
+                description: uploadTask.description,
+                artworkType: uploadTask.artworkType,
+                imageURL: "",
+                createdAt: Date(),
+                updatedAt: Date()
+            )
             let artwork = try await supabaseService.uploadArtworkWithProgress(
-                childId: childId,
-                title: title,
-                description: description,
-                imageData: optimizedImage.compressed,
-                artworkType: artworkType
+                artworkUpload,
+                imageData: optimizedImage.compressed
             ) { uploadProgress in
                 progress(0.3 + (uploadProgress * 0.7))
             }
             
             // Step 3: Complete
-            uploadTask.status = .completed
+            uploadTask.status = UploadStatus.completed
             uploadTask.artwork = artwork
             progress(1.0)
             
@@ -176,7 +194,7 @@ class StorageService: ObservableObject, ServiceProtocol {
             return artwork
             
         } catch {
-            uploadTask.status = .failed
+                uploadTask.status = UploadStatus.failed
             uploadTask.error = error
             errorMessage = error.localizedDescription
             
@@ -190,8 +208,8 @@ class StorageService: ObservableObject, ServiceProtocol {
     
     private func processImageForUpload(_ image: UIImage) async throws -> OptimizedImage {
         return try await withCheckedThrowingContinuation { continuation in
-            imageProcessor.processImage(image) { processedImage in
-                if let optimized = imageProcessor.optimizeImageForUpload(processedImage.processedImage) {
+            self.imageProcessor.processImage(image) { processedImage in
+                if let optimized = self.imageProcessor.optimizeImageForUpload(processedImage.processedImage) {
                     continuation.resume(returning: optimized)
                 } else {
                     continuation.resume(throwing: ImageProcessingError.compressionFailed)
@@ -202,10 +220,10 @@ class StorageService: ObservableObject, ServiceProtocol {
     
     private func processImageForUploadWithProgress(_ image: UIImage, progress: @escaping (Double) -> Void) async throws -> OptimizedImage {
         return try await withCheckedThrowingContinuation { continuation in
-            imageProcessor.processImage(image) { processedImage in
+            self.imageProcessor.processImage(image) { processedImage in
                 progress(0.5)
                 
-                if let optimized = imageProcessor.optimizeImageForUpload(processedImage.processedImage) {
+                if let optimized = self.imageProcessor.optimizeImageForUpload(processedImage.processedImage) {
                     progress(1.0)
                     continuation.resume(returning: optimized)
                 } else {
@@ -342,13 +360,7 @@ class StorageService: ObservableObject, ServiceProtocol {
     
     func queueUpload(_ upload: QueuedUpload) async {
         // Add to offline queue
-        uploadQueue.append(QueuedUpload(
-            childId: upload.childId,
-            title: upload.title,
-            description: upload.description,
-            artworkType: upload.artworkType,
-            imageData: upload.imageData
-        ))
+        uploadQueue.append(upload)
         
         // Save to persistent storage
         await saveOfflineQueue()
@@ -375,16 +387,24 @@ class StorageService: ObservableObject, ServiceProtocol {
                 )
                 
                 // Attempt upload
-                uploadTask.status = .uploading
-                let artwork = try await supabaseService.uploadArtwork(
+                uploadTask.status = UploadStatus.uploading
+                let artworkUpload = ArtworkUpload(
+                    id: uploadTask.id,
                     childId: queuedUpload.childId,
+                    userId: UUID(), // TODO: Get actual user ID
                     title: queuedUpload.title,
                     description: queuedUpload.description,
-                    imageData: queuedUpload.imageData,
-                    artworkType: queuedUpload.artworkType
+                    artworkType: queuedUpload.artworkType,
+                    imageURL: "",
+                    createdAt: Date(),
+                    updatedAt: Date()
                 )
+                let artwork = try await supabaseService.uploadArtwork(
+                    artworkUpload,
+                    imageData: queuedUpload.imageData
+                ) { _ in }
                 
-                uploadTask.status = .completed
+                uploadTask.status = UploadStatus.completed
                 uploadTask.artwork = artwork
                 completedUploads.append(uploadTask)
                 
@@ -398,7 +418,7 @@ class StorageService: ObservableObject, ServiceProtocol {
                     description: queuedUpload.description,
                     artworkType: queuedUpload.artworkType,
                     image: UIImage(data: queuedUpload.imageData) ?? UIImage(),
-                    status: .failed
+                    status: UploadStatus.failed
                 )
                 uploadTask.error = error
                 failedUploads.append(uploadTask)
@@ -422,23 +442,31 @@ class StorageService: ObservableObject, ServiceProtocol {
         guard let index = failedUploads.firstIndex(where: { $0.id == uploadTask.id }) else { return }
         
         failedUploads.remove(at: index)
-        uploadTask.status = .retrying
+        uploadTask.status = UploadStatus.retrying
         
         do {
-            let artwork = try await supabaseService.uploadArtwork(
+            let artworkUpload = ArtworkUpload(
+                id: uploadTask.id,
                 childId: uploadTask.childId,
+                userId: UUID(), // TODO: Get actual user ID
                 title: uploadTask.title,
                 description: uploadTask.description,
-                imageData: uploadTask.image.jpegData(compressionQuality: 0.8) ?? Data(),
-                artworkType: uploadTask.artworkType
+                artworkType: uploadTask.artworkType,
+                imageURL: "",
+                createdAt: Date(),
+                updatedAt: Date()
             )
+            let artwork = try await supabaseService.uploadArtwork(
+                artworkUpload,
+                imageData: uploadTask.image.jpegData(compressionQuality: 0.8) ?? Data()
+            ) { _ in }
             
-            uploadTask.status = .completed
+            uploadTask.status = UploadStatus.completed
             uploadTask.artwork = artwork
             completedUploads.append(uploadTask)
             
         } catch {
-            uploadTask.status = .failed
+                uploadTask.status = UploadStatus.failed
             uploadTask.error = error
             failedUploads.append(uploadTask)
         }

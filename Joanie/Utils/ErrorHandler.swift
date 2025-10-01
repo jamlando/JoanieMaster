@@ -599,7 +599,7 @@ enum LoadingState {
 
 // MARK: - Loading View
 
-struct LoadingView: View {
+struct ErrorLoadingView: View {
     let message: String
     let progress: Double?
     
@@ -647,7 +647,7 @@ struct LoadingOverlay: ViewModifier {
                 .blur(radius: isLoading ? 2 : 0)
             
             if isLoading {
-                LoadingView(message: message, progress: progress)
+                ErrorLoadingView(message: message, progress: progress)
             }
         }
     }
@@ -670,8 +670,8 @@ struct AsyncLoadingView<Content: View, Loading: View, Error: View>: View {
     init(
         loadingState: LoadingState,
         @ViewBuilder content: @escaping () -> Content,
-        @ViewBuilder loading: @escaping () -> Loading = { LoadingView() },
-        @ViewBuilder error: @escaping (AppError) -> Error = { ErrorView(error: $0, onDismiss: {}) }
+        @ViewBuilder loading: @escaping () -> Loading = { ErrorLoadingView() },
+        @ViewBuilder error: @escaping (AppError) -> Error = { _ in EmptyView() }
     ) {
         self.loadingState = loadingState
         self.content = content

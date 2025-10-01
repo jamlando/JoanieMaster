@@ -132,32 +132,9 @@ class KeychainService {
         }
     }
     
-    func getSessionInfo() -> SessionInfo? {
-        do {
-            guard let accessToken = try retrieveAccessToken(),
-                  let refreshToken = try retrieveRefreshToken(),
-                  let userID = try retrieveUserID() else {
-                return nil
-            }
-            
-            return SessionInfo(
-                accessToken: accessToken,
-                refreshToken: refreshToken,
-                userID: userID
-            )
-        } catch {
-            return nil
-        }
-    }
 }
 
 // MARK: - Supporting Types
-
-struct SessionInfo {
-    let accessToken: String
-    let refreshToken: String
-    let userID: String
-}
 
 enum KeychainError: LocalizedError {
     case storeFailed(OSStatus)
@@ -189,6 +166,15 @@ class SecureSessionManager: ObservableObject {
     
     private let keychainService = KeychainService.shared
     private var refreshTimer: Timer?
+    private let logger = Logger.shared
+    
+    private func logInfo(_ message: String) {
+        logger.info(message)
+    }
+    
+    private func logError(_ message: String) {
+        logger.error(message)
+    }
     
     // MARK: - Session Management
     
@@ -222,24 +208,24 @@ class SecureSessionManager: ObservableObject {
     }
     
     func restoreSession() {
-        guard let sessionInfo = keychainService.getSessionInfo() else {
+        guard let userID = try? keychainService.retrieveUserID() else {
             clearSession()
             return
         }
         
-        currentUserID = sessionInfo.userID
+        currentUserID = userID
         isAuthenticated = true
         
         // Check if session is still valid
         if let expiry = sessionExpiry, Date() > expiry {
-            refreshToken()
+            Task { await refreshToken() }
         } else {
-            logInfo("Session restored for user: \(sessionInfo.userID)")
+            logInfo("Session restored for user: \(userID)")
         }
     }
     
-    func refreshToken() {
-        guard let refreshToken = try? keychainService.retrieveRefreshToken() else {
+    func refreshToken() async {
+        guard let _ = try? keychainService.retrieveRefreshToken() else {
             clearSession()
             return
         }
@@ -249,10 +235,8 @@ class SecureSessionManager: ObservableObject {
         
         // For now, we'll simulate a successful refresh
         // In production, this would call Supabase's refresh endpoint
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            // Simulate successful refresh
-            self.logInfo("Token refreshed successfully")
-        }
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
+        logInfo("Token refreshed successfully")
     }
     
     func clearSession() {
@@ -281,7 +265,9 @@ class SecureSessionManager: ObservableObject {
         let refreshTime = max(expiresIn - 300, 60) // At least 1 minute
         
         refreshTimer = Timer.scheduledTimer(withTimeInterval: refreshTime, repeats: false) { [weak self] _ in
-            self?.refreshToken()
+            Task { @MainActor in
+                await self?.refreshToken()
+            }
         }
     }
     
