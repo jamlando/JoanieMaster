@@ -365,12 +365,10 @@ class SupabaseService: ObservableObject {
             let authResponse = try await client.auth.signUp(
                 email: email,
                 password: password,
-                data: ["full_name": fullName]
+                data: ["full_name": .string(fullName)]
             )
             
-            guard let user = authResponse.user else {
-                throw SupabaseError.userNotFound
-            }
+            let user = authResponse.user
             
             // Store authentication tokens
             if let session = authResponse.session {
@@ -378,6 +376,7 @@ class SupabaseService: ObservableObject {
                 if let refreshToken = session.refreshToken {
                     try keychainService.storeRefreshToken(refreshToken)
                 }
+                try keychainService.storeUserID(user.id.uuidString)
             }
             
             let userProfile = UserProfile(
@@ -406,9 +405,7 @@ class SupabaseService: ObservableObject {
                 password: password
             )
             
-            guard let user = authResponse.user else {
-                throw SupabaseError.userNotFound
-            }
+            let user = authResponse.user
             
             // Store authentication tokens
             if let session = authResponse.session {
@@ -416,6 +413,7 @@ class SupabaseService: ObservableObject {
                 if let refreshToken = session.refreshToken {
                     try keychainService.storeRefreshToken(refreshToken)
                 }
+                try keychainService.storeUserID(user.id.uuidString)
             }
             
             // Extract full name from user metadata
@@ -460,8 +458,7 @@ class SupabaseService: ObservableObject {
             try await client.auth.signOut()
             
             // Clear stored tokens from keychain
-            keychainService.deleteAccessToken()
-            keychainService.deleteRefreshToken()
+            try keychainService.clearSession()
             
             // Clear any cached data
             await clearCachedData()
