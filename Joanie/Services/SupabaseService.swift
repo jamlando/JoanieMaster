@@ -1,13 +1,8 @@
 import Foundation
-// import Supabase // TODO: Add Supabase dependency via Xcode Package Manager
-// import SupabaseAuth // TODO: Add Supabase dependency via Xcode Package Manager
+import Supabase
 import Combine
 import UIKit
 import AuthenticationServices
-
-// MARK: - Placeholder Types (to be replaced with actual Supabase types)
-typealias SupabaseClient = Any
-typealias User = Any
 
 @MainActor
 class SupabaseService: ObservableObject {
@@ -35,8 +30,11 @@ class SupabaseService: ObservableObject {
     }
     
     private init() {
-        // Mock client for now - will be replaced with real Supabase client
-        self.client = "mock_client" as Any
+        // Initialize real Supabase client
+        self.client = SupabaseClient(
+            supabaseURL: URL(string: Secrets.supabaseURL)!,
+            supabaseKey: Secrets.supabaseAnonKey
+        )
         
         setupAuthStateListener()
         setupSessionMonitoring()
@@ -51,16 +49,69 @@ class SupabaseService: ObservableObject {
     // MARK: - Auth State Management
     
     private func setupAuthStateListener() {
-        // Mock auth state listener for now
-        // TODO: Implement real Supabase auth state listener when dependency is added
+        // Listen for authentication state changes
+        Task {
+            for await state in client.auth.authStateChanges {
+                await MainActor.run {
+                    switch state.event {
+                    case .signedIn:
+                        self.sessionState = .authenticated
+                        self.isAuthenticated = true
+                        
+                        // Load user profile if user is available
+                        if let user = state.session?.user {
+                            Task {
+                                await self.loadUserProfile(from: user)
+                            }
+                        }
+                        
+                    case .signedOut:
+                        self.sessionState = .invalid
+                        self.isAuthenticated = false
+                        self.currentUser = nil
+                        
+                    case .tokenRefreshed:
+                        self.sessionState = .authenticated
+                        self.isAuthenticated = true
+                        
+                    default:
+                        break
+                    }
+                }
+            }
+        }
     }
     
     private func checkExistingSession() async {
-        // Mock implementation for now
-        await MainActor.run {
-            self.sessionState = .invalid
-            self.isAuthenticated = false
-            self.currentUser = nil
+        do {
+            // Check if we have a valid session stored
+            guard let storedToken = try keychainService.retrieveAccessToken() else {
+                await MainActor.run {
+                    self.sessionState = .invalid
+                    self.isAuthenticated = false
+                    self.currentUser = nil
+                }
+                return
+            }
+            
+            // Try to refresh the session
+            try await refreshSession()
+            
+            await MainActor.run {
+                self.sessionState = .authenticated
+                self.isAuthenticated = true
+            }
+            
+            // Load user profile
+            await loadCurrentUser()
+            
+        } catch {
+            Logger.shared.error("SupabaseService: Check existing session failed - \(error)")
+            await MainActor.run {
+                self.sessionState = .invalid
+                self.isAuthenticated = false
+                self.currentUser = nil
+            }
         }
     }
     
@@ -279,46 +330,116 @@ class SupabaseService: ObservableObject {
     }
     
     private func loadCurrentUser() async {
-        // Mock implementation for now
-        // TODO: Implement real user loading
+        guard let user = client.auth.currentUser else {
+            await MainActor.run {
+                self.currentUser = nil
+            }
+            return
+        }
+        
+        await loadUserProfile(from: user)
     }
     
-    // MARK: - Authentication
-    
-    func signUp(email: String, password: String, fullName: String) async throws -> UserProfile {
-        // Mock implementation for now
-        // TODO: Implement real Supabase sign up
+    private func loadUserProfile(from user: User) async {
+        // Extract user information from Supabase User
+        let fullName = user.userMetadata["full_name"] as? String ?? 
+                      user.userMetadata["name"] as? String ?? 
+                      user.email ?? "User"
+        
         let userProfile = UserProfile(
-            id: UUID(),
-            email: email,
+            id: user.id,
+            email: user.email ?? "",
             fullName: fullName,
             role: .parent
         )
         
         await MainActor.run {
-            self.sessionState = .authenticated
             self.currentUser = userProfile
         }
-        
-        return userProfile
+    }
+    
+    // MARK: - Authentication
+    
+    func signUp(email: String, password: String, fullName: String) async throws -> UserProfile {
+        do {
+            let authResponse = try await client.auth.signUp(
+                email: email,
+                password: password,
+                data: ["full_name": fullName]
+            )
+            
+            guard let user = authResponse.user else {
+                throw SupabaseError.userNotFound
+            }
+            
+            // Store authentication tokens
+            if let session = authResponse.session {
+                try keychainService.storeAccessToken(session.accessToken)
+                if let refreshToken = session.refreshToken {
+                    try keychainService.storeRefreshToken(refreshToken)
+                }
+            }
+            
+            let userProfile = UserProfile(
+                id: user.id,
+                email: user.email ?? email,
+                fullName: fullName,
+                role: .parent
+            )
+            
+            await MainActor.run {
+                self.sessionState = .authenticated
+                self.currentUser = userProfile
+            }
+            
+            return userProfile
+        } catch {
+            Logger.shared.error("SupabaseService: Sign up failed - \(error)")
+            throw SupabaseErrorMapper.shared.mapSupabaseError(error)
+        }
     }
     
     func signIn(email: String, password: String) async throws -> UserProfile {
-        // Mock implementation for now
-        // TODO: Implement real Supabase sign in
-        let userProfile = UserProfile(
-            id: UUID(),
-            email: email,
-            fullName: "Mock User",
-            role: .parent
-        )
-        
-        await MainActor.run {
-            self.sessionState = .authenticated
-            self.currentUser = userProfile
+        do {
+            let authResponse = try await client.auth.signIn(
+                email: email,
+                password: password
+            )
+            
+            guard let user = authResponse.user else {
+                throw SupabaseError.userNotFound
+            }
+            
+            // Store authentication tokens
+            if let session = authResponse.session {
+                try keychainService.storeAccessToken(session.accessToken)
+                if let refreshToken = session.refreshToken {
+                    try keychainService.storeRefreshToken(refreshToken)
+                }
+            }
+            
+            // Extract full name from user metadata
+            let fullName = user.userMetadata["full_name"] as? String ?? 
+                          user.userMetadata["name"] as? String ?? 
+                          user.email ?? "User"
+            
+            let userProfile = UserProfile(
+                id: user.id,
+                email: user.email ?? email,
+                fullName: fullName,
+                role: .parent
+            )
+            
+            await MainActor.run {
+                self.sessionState = .authenticated
+                self.currentUser = userProfile
+            }
+            
+            return userProfile
+        } catch {
+            Logger.shared.error("SupabaseService: Sign in failed - \(error)")
+            throw SupabaseErrorMapper.shared.mapSupabaseError(error)
         }
-        
-        return userProfile
     }
     
     func signInWithApple() async throws -> UserProfile {
@@ -328,24 +449,34 @@ class SupabaseService: ObservableObject {
     }
     
     func signOut() async throws {
-        // Stop session monitoring first
-        stopSessionRefreshTimer()
-        
-        // End any background tasks
-        endBackgroundTask()
-        
-        // Clear any cached data
-        await clearCachedData()
-        
-        // Mock implementation for now
-        // TODO: Implement real Supabase sign out
-        await MainActor.run {
-            self.sessionState = .invalid
-            self.isAuthenticated = false
-            self.currentUser = nil
+        do {
+            // Stop session monitoring first
+            stopSessionRefreshTimer()
+            
+            // End any background tasks
+            endBackgroundTask()
+            
+            // Sign out from Supabase
+            try await client.auth.signOut()
+            
+            // Clear stored tokens from keychain
+            keychainService.deleteAccessToken()
+            keychainService.deleteRefreshToken()
+            
+            // Clear any cached data
+            await clearCachedData()
+            
+            await MainActor.run {
+                self.sessionState = .invalid
+                self.isAuthenticated = false
+                self.currentUser = nil
+            }
+            
+            Logger.shared.info("SupabaseService: User signed out successfully")
+        } catch {
+            Logger.shared.error("SupabaseService: Sign out failed - \(error)")
+            throw SupabaseErrorMapper.shared.mapSupabaseError(error)
         }
-        
-        Logger.shared.info("User signed out successfully")
     }
     
     private func clearCachedData() async {
@@ -358,13 +489,18 @@ class SupabaseService: ObservableObject {
     }
     
     func getCurrentUser() -> User? {
-        // Mock implementation for now
-        return nil
+        // Get current user from Supabase client
+        return client.auth.currentUser
     }
     
     func resetPassword(email: String) async throws {
-        // Mock implementation for now
-        // TODO: Implement real Supabase password reset
+        do {
+            try await client.auth.resetPasswordForEmail(email)
+            Logger.shared.info("SupabaseService: Password reset email sent successfully")
+        } catch {
+            Logger.shared.error("SupabaseService: Password reset failed - \(error)")
+            throw SupabaseErrorMapper.shared.mapSupabaseError(error)
+        }
     }
     
     func updatePassword(currentPassword: String, newPassword: String) async throws {
@@ -416,31 +552,27 @@ class SupabaseService: ObservableObject {
                 self.sessionState = .refreshing
             }
             
-            // Get current session data
-            guard let _ = try keychainService.retrieveAccessToken() else {
-                throw SupabaseError.notAuthenticated
-            }
-            
-            // Mock session refresh - in real implementation, call Supabase API
-            // TODO: Implement real Supabase session refresh
-            let newAccessToken = "refreshed_access_token_\(UUID().uuidString)"
-            let newRefreshToken = "refreshed_refresh_token_\(UUID().uuidString)"
-            let newExpiryDate = Date().addingTimeInterval(3600) // 1 hour from now
+            // Refresh session using Supabase client
+            let session = try await client.auth.refreshSession()
             
             // Store new session data
-            try keychainService.storeAccessToken(newAccessToken)
-            try keychainService.storeRefreshToken(newRefreshToken)
+            try keychainService.storeAccessToken(session.accessToken)
+            if let refreshToken = session.refreshToken {
+                try keychainService.storeRefreshToken(refreshToken)
+            }
             
             await MainActor.run {
                 self.sessionState = .authenticated
             }
             
+            Logger.shared.info("SupabaseService: Session refreshed successfully")
+            
         } catch {
-            Logger.shared.error("Session refresh failed: \(error)")
+            Logger.shared.error("SupabaseService: Session refresh failed - \(error)")
             await MainActor.run {
                 self.sessionState = .expired
             }
-            throw error
+            throw SupabaseErrorMapper.shared.mapSupabaseError(error)
         }
     }
     
