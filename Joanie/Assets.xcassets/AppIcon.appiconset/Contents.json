@@ -90,12 +90,6 @@
       "scale" : "1x",
       "size" : "1024x1024",
       "filename" : "joanie_icon.png"
-    },
-    {
-      "size" : "1024x1024",
-      "idiom" : "universal",
-      "filename" : "Frame 1.svg",
-      "scale" : "1x"
     }
   ],
   "info" : {
