@@ -352,21 +352,41 @@ Joanie is an iOS app designed to help parents digitally preserve and analyze the
 
 ### Current Sprint: Phase 6.1 - TestFlight Setup and Beta Testing (IMMEDIATE PRIORITY)
 
-#### Task 6.1.1: Configure Apple Developer Account and App Store Connect (6 sub-tasks) - IN PROGRESS
-- [ ] Verify Apple Developer account access and team membership
-- [ ] Create App Store Connect app record for Joanie
-- [ ] Configure app metadata (name, description, keywords, categories)
-- [ ] Set up app icons and screenshots for TestFlight
-- [ ] Configure app version and build numbers
-- [ ] Set up app privacy and data collection disclosures
+#### Task 6.1.1: Configure Apple Developer Account and App Store Connect (6 sub-tasks) - ✅ COMPLETED
+- ✅ Verify Apple Developer account access and team membership
+- ✅ Create App Store Connect app record for Joanie
+- ✅ Configure app metadata (name, description, keywords, categories)
+- ✅ Set up app icons and screenshots for TestFlight
+- ✅ Configure app version and build numbers
+- ✅ Set up app privacy and data collection disclosures
 
-#### Task 6.1.2: Configure Xcode Project for Distribution (6 sub-tasks) - PENDING
-- [ ] Update bundle identifier to match App Store Connect
-- [ ] Configure signing certificates and provisioning profiles
-- [ ] Set up automatic code signing
-- [ ] Configure build settings for distribution
-- [ ] Update Info.plist with proper app information
-- [ ] Configure entitlements and capabilities
+#### Task 6.1.2: Configure Xcode Project for Distribution (6 sub-tasks) - 🔄 IN PROGRESS
+
+**Sub-task Analysis & Execution Plan**:
+
+1. **Update bundle identifier to match App Store Connect**
+   - Success Criteria: Bundle identifier verified compatible with existing App Store Connect record
+   - Risk: May need to create new App Store Connect app if identifier doesn't match
+   
+2. **Configure signing certificates and provisioning profiles**
+   - Success Criteria: Distribution certificate detected and usable in Xcode
+   - Action Needed: Verify/copy distribution certificate from Apple Developer portal
+   
+3. **Set up automatic code signing**
+   - Success Criteria: Automatic signing configured for Distribution/Release builds
+   - Current Status: Already configured for Development
+   
+4. **Configure build settings for distribution**
+   - Success Criteria: Release build configuration optimized, debug symbols configured
+   - Action Needed: Set Release build scheme, optimize settings
+   
+5. **Update Info.plist with proper app information**
+   - Success Criteria: Privacy descriptions present, NSPhotoLibrary/camera permissions configured
+   - Current Status: Looking good, may need privacy manifest additions
+   
+6. **Configure entitlements and capabilities**
+   - Success Criteria: Camera usage capability enabled, TestFlight-compatible entitlement file
+   - Current Status: May need explicit entitlements file
 
 #### Task 6.1.3: Build and Archive App for TestFlight (6 sub-tasks) - PENDING
 - [ ] Clean and build project for distribution
@@ -520,6 +540,25 @@ Joanie is an iOS app designed to help parents digitally preserve and analyze the
 
 ## Current Status / Progress Tracking
 
+### Latest Updates (2025-01-10) - Planner Analysis
+
+**Task 6.1.2 Analysis**: Configure Xcode Project for Distribution
+
+**Current Project State Assessment**:
+- ✅ Bundle Identifier: `com.joanie.app` (configured)
+- ✅ Code Signing: Automatic signing enabled with Apple Development identity
+- ✅ App Version: Marketing version 1.0, build 1
+- ✅ Team Membership: Apple Development account verified
+- ⚠️ **Critical Dependency**: Need to verify bundle identifier matches App Store Connect
+
+**Task Priorities for Task 6.1.2**:
+1. **IMMEDIATE**: Verify bundle identifier compatibility with App Store Connect app record
+2. **HIGH**: Configure distribution-specific build settings (Release configuration) 
+3. **HIGH**: Update entitlements and capabilities for TestFlight
+4. **MEDIUM**: Validate Info.plist configuration for App Store submission
+5. **MEDIUM**: Test clean build process for distribution
+6. **LOW**: Add privacy manifest files if required for App Store Review
+
 ### Latest Updates (2025-01-10)
 - ✅ **Fixed build errors in ImageProcessor.swift** - Resolved tuple member access issues (commit b9c0adf)
 - ✅ **Resolved SwiftLint violations** - Updated configuration to disable problematic rules
@@ -530,16 +569,19 @@ Joanie is an iOS app designed to help parents digitally preserve and analyze the
 - ✅ **Set up app icons and screenshots** - Created custom app icon (1024x1024 PNG)
 - ✅ **Configured app version and build numbers** - Version 1.0, build 1 verified
 - ✅ **Set up app privacy and data collection disclosures** - Comprehensive privacy documentation created
-- 🔄 **Moving to Task 6.1.2** - Configure Xcode Project for Distribution
+- 🔄 **Starting Task 6.1.2** - Configure Xcode Project for Distribution
+- ✅ **Current Status**: Apple Developer account verified, valid signing identity confirmed ("Apple Development: taylor.larson5@gmail.com")
+- ✅ **Bundle Identifier**: com.joanie.app (ready to verify match with App Store Connect)
+- ✅ **Version Info**: Marketing version 1.0, build 1, automatic code signing configured
 
-**Current Phase**: Phase 6.1 - TestFlight Setup and Beta Testing (IMMEDIATE PRIORITY)
-**Current Challenge**: Setting up TestFlight for beta testing with Apple Developer account
-**Next Milestone**: Complete TestFlight setup and begin beta testing
+**Current Phase**: Phase 6.1 - TestFlight Setup and Beta Testing (IMMEDIATE PRIORITY)  
+**Current Challenge**: Configure Xcode project for TestFlight distribution
+**Next Milestone**: Complete distribution configuration and successfully build/archive app
 **Risk Level**: Medium (requires Apple Developer account configuration and app signing)
 
 **Phase 1 Progress**: 29/29 sub-tasks completed ✅
 **Phase 2 Progress**: Task 2.1 completed (9/9 sub-tasks), Task 2.2 completed (9/9 sub-tasks)
-**Current Task**: Task 6.1.1 - Configure Apple Developer Account and App Store Connect
+**Current Task**: Task 6.1.2 - Configure Xcode Project for Distribution
 
 **TestFlight Setup**: 36 sub-tasks identified across 6 major tasks
 **Current Phase**: Phase 6.1 - TestFlight Setup and Beta Testing (IMMEDIATE PRIORITY)
@@ -1392,6 +1434,19 @@ enum AuthenticationError: LocalizedError, Equatable {
 **Next Steps**: Ready to proceed with Task 2.1.9 - Test authentication flows on device and simulator
 
 ## Executor's Feedback or Assistance Requests
+
+### Ready for Executor Mode - Task 6.1.2 Execution
+
+**Planner Status**: Task 6.1.2 analysis complete, ready for implementation
+
+**Next Action Required**: User to specify Executor mode to begin Task 6.1.2 implementation
+
+**Critical Dependencies Identified**:
+1. Bundle identifier verification with App Store Connect
+2. Distribution certificate setup in Xcode
+3. Release build scheme configuration
+
+**Estimated Time**: 30—45 minutes for complete Task 6.1.2 execution
 
 ### Quick Actions
 - ✅ **Committed authentication and photo upload changes** - All 11 modified files committed and pushed to GitHub (commit e2a54e6)
