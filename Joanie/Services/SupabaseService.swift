@@ -58,8 +58,8 @@ class SupabaseService: ObservableObject {
                         self.sessionState = .authenticated
                         self.isAuthenticated = true
                         
-                        // Load user profile if user is available
-                        if let session = state.session, let user = session.user {
+                        // Load user profile from current user
+                        if let user = client.auth.currentUser {
                             Task {
                                 await self.loadUserProfile(from: user)
                             }
