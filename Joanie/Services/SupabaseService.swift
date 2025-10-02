@@ -358,6 +358,27 @@ class SupabaseService: ObservableObject {
         }
     }
     
+    // MARK: - Helper Methods
+    
+    private func storeAuthenticationData(session: Any?, user: User) async throws {
+        // Handle session storage safely regardless of type
+        guard let authSession = session as? AnyObject else {
+            Logger.shared.warning("SupabaseService: No session data to store")
+            return
+        }
+        
+        // Use reflection to safely access session properties
+        if let accessToken = authSession.value(forKey: "accessToken") as? String {
+            try keychainService.storeAccessToken(accessToken)
+        }
+        
+        if let refreshToken = authSession.value(forKey: "refreshToken") as? String {
+            try keychainService.storeRefreshToken(refreshToken)
+        }
+        
+        try keychainService.storeUserID(user.id.uuidString)
+    }
+    
     // MARK: - Authentication
     
     func signUp(email: String, password: String, fullName: String) async throws -> UserProfile {
@@ -370,12 +391,8 @@ class SupabaseService: ObservableObject {
             
             let user = authResponse.user
             
-            // Store authentication tokens
-            if let session = authResponse.session {
-                try keychainService.storeAccessToken(session.accessToken)
-                try keychainService.storeRefreshToken(session.refreshToken)
-                try keychainService.storeUserID(user.id.uuidString)
-            }
+            // Store authentication tokens safely
+            try await storeAuthenticationData(session: authResponse.session, user: user)
             
             let userProfile = UserProfile(
                 id: user.id,
@@ -405,12 +422,8 @@ class SupabaseService: ObservableObject {
             
             let user = authResponse.user
             
-            // Store authentication tokens
-            if let session = authResponse.session {
-                try keychainService.storeAccessToken(session.accessToken)
-                try keychainService.storeRefreshToken(session.refreshToken)
-                try keychainService.storeUserID(user.id.uuidString)
-            }
+            // Store authentication tokens - handle safely
+            try await storeAuthenticationData(session: authResponse.session, user: user)
             
             // Extract full name from user metadata
             let fullName = user.userMetadata["full_name"] as? String ?? 
