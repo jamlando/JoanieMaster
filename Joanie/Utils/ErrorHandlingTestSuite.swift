@@ -438,7 +438,7 @@ class ErrorHandlingTestSuite {
                     throw AuthenticationError.invalidCredentials
                 },
                 config: .default
-            ) { error, attempt in
+            ) { error, _ in
                 // Custom logic: only retry network errors
                 if let authError = error as? AuthenticationError {
                     return authError.canRetry
@@ -516,7 +516,7 @@ class ErrorHandlingTestSuite {
             )
             
             // Verify error properties
-            XCTAssertEqual(error.canRetry, true, "Rate limit error should be retryable")
+            XCTAssertTrue(error.canRetry, "Rate limit error should be retryable")
             
             addTestResult("Error Alert", success: true, duration: Date().timeIntervalSince(startTime))
         } catch {

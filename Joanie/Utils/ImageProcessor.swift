@@ -473,11 +473,9 @@ class ImageProcessor: ObservableObject {
             [0xCF, 0xFA, 0xED, 0xFE]  // Mach-O executable
         ]
         
-        for signature in maliciousSignatures {
-            if data.starts(with: signature) {
-                logError("SECURITY: Malicious file signature detected")
-                return true
-            }
+        for signature in maliciousSignatures where data.starts(with: signature) {
+            logError("SECURITY: Malicious file signature detected")
+            return true
         }
         
         // Check for embedded scripts or executables
