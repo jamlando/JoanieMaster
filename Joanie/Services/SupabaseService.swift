@@ -373,9 +373,7 @@ class SupabaseService: ObservableObject {
             // Store authentication tokens
             if let session = authResponse.session {
                 try keychainService.storeAccessToken(session.accessToken)
-                if let refreshToken = session.refreshToken {
-                    try keychainService.storeRefreshToken(refreshToken)
-                }
+                try keychainService.storeRefreshToken(session.refreshToken)
                 try keychainService.storeUserID(user.id.uuidString)
             }
             
@@ -410,9 +408,7 @@ class SupabaseService: ObservableObject {
             // Store authentication tokens
             if let session = authResponse.session {
                 try keychainService.storeAccessToken(session.accessToken)
-                if let refreshToken = session.refreshToken {
-                    try keychainService.storeRefreshToken(refreshToken)
-                }
+                try keychainService.storeRefreshToken(session.refreshToken)
                 try keychainService.storeUserID(user.id.uuidString)
             }
             
@@ -554,9 +550,7 @@ class SupabaseService: ObservableObject {
             
             // Store new session data
             try keychainService.storeAccessToken(session.accessToken)
-            if let refreshToken = session.refreshToken {
-                try keychainService.storeRefreshToken(refreshToken)
-            }
+            try keychainService.storeRefreshToken(session.refreshToken)
             
             await MainActor.run {
                 self.sessionState = .authenticated
