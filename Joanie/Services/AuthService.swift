@@ -1,5 +1,5 @@
 import Foundation
-// import Supabase // TODO: Add Supabase dependency
+import Supabase
 import Combine
 
 @MainActor

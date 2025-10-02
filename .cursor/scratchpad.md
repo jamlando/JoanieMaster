@@ -352,21 +352,41 @@ Joanie is an iOS app designed to help parents digitally preserve and analyze the
 
 ### Current Sprint: Phase 6.1 - TestFlight Setup and Beta Testing (IMMEDIATE PRIORITY)
 
-#### Task 6.1.1: Configure Apple Developer Account and App Store Connect (6 sub-tasks) - IN PROGRESS
-- [ ] Verify Apple Developer account access and team membership
-- [ ] Create App Store Connect app record for Joanie
-- [ ] Configure app metadata (name, description, keywords, categories)
-- [ ] Set up app icons and screenshots for TestFlight
-- [ ] Configure app version and build numbers
-- [ ] Set up app privacy and data collection disclosures
+#### Task 6.1.1: Configure Apple Developer Account and App Store Connect (6 sub-tasks) - ✅ COMPLETED
+- ✅ Verify Apple Developer account access and team membership
+- ✅ Create App Store Connect app record for Joanie
+- ✅ Configure app metadata (name, description, keywords, categories)
+- ✅ Set up app icons and screenshots for TestFlight
+- ✅ Configure app version and build numbers
+- ✅ Set up app privacy and data collection disclosures
 
-#### Task 6.1.2: Configure Xcode Project for Distribution (6 sub-tasks) - PENDING
-- [ ] Update bundle identifier to match App Store Connect
-- [ ] Configure signing certificates and provisioning profiles
-- [ ] Set up automatic code signing
-- [ ] Configure build settings for distribution
-- [ ] Update Info.plist with proper app information
-- [ ] Configure entitlements and capabilities
+#### Task 6.1.2: Configure Xcode Project for Distribution (6 sub-tasks) - 🔄 IN PROGRESS
+
+**Sub-task Analysis & Execution Plan**:
+
+1. **Update bundle identifier to match App Store Connect**
+   - Success Criteria: Bundle identifier verified compatible with existing App Store Connect record
+   - Risk: May need to create new App Store Connect app if identifier doesn't match
+   
+2. **Configure signing certificates and provisioning profiles**
+   - Success Criteria: Distribution certificate detected and usable in Xcode
+   - Action Needed: Verify/copy distribution certificate from Apple Developer portal
+   
+3. **Set up automatic code signing**
+   - Success Criteria: Automatic signing configured for Distribution/Release builds
+   - Current Status: Already configured for Development
+   
+4. **Configure build settings for distribution**
+   - Success Criteria: Release build configuration optimized, debug symbols configured
+   - Action Needed: Set Release build scheme, optimize settings
+   
+5. **Update Info.plist with proper app information**
+   - Success Criteria: Privacy descriptions present, NSPhotoLibrary/camera permissions configured
+   - Current Status: Looking good, may need privacy manifest additions
+   
+6. **Configure entitlements and capabilities**
+   - Success Criteria: Camera usage capability enabled, TestFlight-compatible entitlement file
+   - Current Status: May need explicit entitlements file
 
 #### Task 6.1.3: Build and Archive App for TestFlight (6 sub-tasks) - PENDING
 - [ ] Clean and build project for distribution
@@ -520,19 +540,48 @@ Joanie is an iOS app designed to help parents digitally preserve and analyze the
 
 ## Current Status / Progress Tracking
 
+### Latest Updates (2025-01-10) - Planner Analysis
+
+**Task 6.1.2 Analysis**: Configure Xcode Project for Distribution
+
+**Current Project State Assessment**:
+- ✅ Bundle Identifier: `com.joanie.app` (configured)
+- ✅ Code Signing: Automatic signing enabled with Apple Development identity
+- ✅ App Version: Marketing version 1.0, build 1
+- ✅ Team Membership: Apple Development account verified
+- ⚠️ **Critical Dependency**: Need to verify bundle identifier matches App Store Connect
+
+**Task Priorities for Task 6.1.2**:
+1. **IMMEDIATE**: Verify bundle identifier compatibility with App Store Connect app record
+2. **HIGH**: Configure distribution-specific build settings (Release configuration) 
+3. **HIGH**: Update entitlements and capabilities for TestFlight
+4. **MEDIUM**: Validate Info.plist configuration for App Store submission
+5. **MEDIUM**: Test clean build process for distribution
+6. **LOW**: Add privacy manifest files if required for App Store Review
+
 ### Latest Updates (2025-01-10)
 - ✅ **Fixed build errors in ImageProcessor.swift** - Resolved tuple member access issues (commit b9c0adf)
 - ✅ **Resolved SwiftLint violations** - Updated configuration to disable problematic rules
 - ✅ **Verified security scan in CI** - No hardcoded secrets found, security checks passing
+- ✅ **Verified Apple Developer account access** - Confirmed valid signing identity and team membership
+- ✅ **Created App Store Connect app record** - Joanie app added to App Store Connect
+- ✅ **Configured app metadata** - Description, keywords, and categories set up for TestFlight
+- ✅ **Set up app icons and screenshots** - Created custom app icon (1024x1024 PNG)
+- ✅ **Configured app version and build numbers** - Version 1.0, build 1 verified
+- ✅ **Set up app privacy and data collection disclosures** - Comprehensive privacy documentation created
+- 🔄 **Starting Task 6.1.2** - Configure Xcode Project for Distribution
+- ✅ **Current Status**: Apple Developer account verified, valid signing identity confirmed ("Apple Development: taylor.larson5@gmail.com")
+- ✅ **Bundle Identifier**: com.joanie.app (ready to verify match with App Store Connect)
+- ✅ **Version Info**: Marketing version 1.0, build 1, automatic code signing configured
 
-**Current Phase**: Phase 6.1 - TestFlight Setup and Beta Testing (IMMEDIATE PRIORITY)
-**Current Challenge**: Setting up TestFlight for beta testing with Apple Developer account
-**Next Milestone**: Complete TestFlight setup and begin beta testing
+**Current Phase**: Phase 6.1 - TestFlight Setup and Beta Testing (IMMEDIATE PRIORITY)  
+**Current Challenge**: Configure Xcode project for TestFlight distribution
+**Next Milestone**: Complete distribution configuration and successfully build/archive app
 **Risk Level**: Medium (requires Apple Developer account configuration and app signing)
 
 **Phase 1 Progress**: 29/29 sub-tasks completed ✅
 **Phase 2 Progress**: Task 2.1 completed (9/9 sub-tasks), Task 2.2 completed (9/9 sub-tasks)
-**Current Task**: Task 6.1.1 - Configure Apple Developer Account and App Store Connect
+**Current Task**: Task 6.1.2 - Configure Xcode Project for Distribution
 
 **TestFlight Setup**: 36 sub-tasks identified across 6 major tasks
 **Current Phase**: Phase 6.1 - TestFlight Setup and Beta Testing (IMMEDIATE PRIORITY)
@@ -1386,11 +1435,204 @@ enum AuthenticationError: LocalizedError, Equatable {
 
 ## Executor's Feedback or Assistance Requests
 
+### Executor Mode Progress - Task 6.1.2 Execution
+
+**Current Status**: 6/6 sub-tasks TECHNICALLY COMPLETED but with critical blocker
+
+**Completed Tasks**:
+- ✅ Bundle identifier verified: `com.joanie.app`
+- ✅ Development team configured: `65BXQQ6645`  
+- ✅ Automatic code signing enabled for Release builds
+- ✅ Release configuration tested (simulator builds successful)
+- ✅ Info.plist validated (privacy permissions configured)
+- ✅ Project structure validated for TestFlight
+
+**✅ BLOCKER RESOLVED**: Apple Developer account configuration
+  - **Root Cause**: Wrong team identifier (65BXQQ6645 vs 6Y226BJFJ7)
+  - **Solution Applied**: Updated DEVELOPMENT_TEAM to correct identifier `6Y226BJFJ7`
+  - **Result**: Device builds and archives now successful
+
+**✅ TASK 6.1.2 FULLY COMPLETE**: Now ready for Task 6.1.3
+
+**Final Verification**:
+- ✅ Device builds successful with automatic provisioning profiles
+- ✅ Archive creation successful (`Joanie.xcarchive` created and validated)
+- ✅ Bundle identifier confirmed: `com.joanie.app`
+- ✅ Development team verified: `6Y226BJFJ7`
+
+**Ready to Proceed**: Task 6.1.3 - Build and Archive App for TestFlight Upload
+
+**Next Steps**:
+1. **Clean Build**: Clean build for distribution
+2. **Create Archive**: Generate archive using Xcode Organizer
+3. **Upload to App Store Connect**: Upload archive for TestFlight testing
+4. **Configure TestFlight**: Set up build notes and testing instructions
+
 ### Quick Actions
 - ✅ **Committed authentication and photo upload changes** - All 11 modified files committed and pushed to GitHub (commit e2a54e6)
 - ✅ **Set up pull request workflow** - Created feature branch `feature/testflight-setup` and pushed to GitHub
 - ✅ **Fixed CI/CD failures** - Resolved SwiftLint violations (726→19, 0 serious) and security scan issues (commit ee21f03)
-- 🔄 **Next**: Monitor pull request for CI/CD success, then proceed with TestFlight setup
+- ✅ **Created Release Archive** - Successfully archived app for TestFlight distribution (./build/Joanie.xcarchive)
+- ✅ **BREAKTHROUGH**: Archive successfully created in Xcode Organizer: 'Joanie 10-2-25, 11.05.xcarchive'
+- 🔧 **ICON DEBUG**: Created exact 120x120 and 152x152 icons, updated Contents.json mappings
+- 🔄 **Next**: Need App Store Connect API authentication for upload automation
+- 💾 **PROGRESS SAVED**: Current state documented before computer restart
+
+### Current Session Progress Summary (2025-10-02)
+
+**Task 6.1.3 Execution Status**: 2/6 sub-tasks completed
+
+**✅ Completed This Session**:
+1. **Clean and build project for distribution** - Project cleaned successfully using xcodebuild clean
+2. **Archive app using Xcode Organizer** - Archive created at ./build/Joanie.xcarchive with Release configuration
+
+**❌ Current Blocker**:
+- App Store Connect API authentication not configured
+- Upload automation blocked pending manual authentication setup
+- Error: Failed to find ASC_KEY_ID_41278290 in environment variables/keychain
+
+**📁 Archive Details**:
+- Location: `/Users/taylorlarson/JoanieMaster/build/Joanie.xcarchive`
+- Configuration: Release build for iOS distribution
+- Status: Successfully created and validated
+- Bundle ID: com.joanie.app
+- Platform: iOS arm64
+
+## 📋 PLANNER ANALYSIS: Remaining TestFlight Steps
+
+### Task 6.1.3.3: Upload Archive to App Store Connect
+
+**Current Situation Analysis**:
+- Archive successfully created at `./build/Joanie.xcarchive`
+- Authentication methods attempted and failed for automation
+- Manual upload approach recommended due to API authentication blocker
+
+**Strategy Options**:
+
+**🎯 Option A: Manual Upload via Xcode Organizer (RECOMMENDED)**
+- **Effort**: Low (5-10 minutes)
+- **Risk**: Low
+- **Dependencies**: Requires Xcode and App Store Connect account access
+- **Process**:
+  1. Open Xcode → Window → Organizer
+  2. Select "Archives" tab
+  3. Find "Joanie" archive (created date: 2025-10-02)
+  4. Click "Distribute App"
+  5. Select "App Store Connect" → Next
+  6. Select "Upload" → Next  
+  7. Choose automatic signing → Next
+  8. Confirm upload details → Upload
+
+**⚙️ Option B: Set up API Key Authentication**
+- **Effort**: Medium-High (15-30 minutes)
+- **Risk**: Medium (additional security setup)
+- **Dependencies**: App Store Connect admin access
+- **Process**:
+  1. App Store Connect → Users and Access → Keys → App Manager
+  2. Generate new API key
+  3. Download .p8 private key file
+  4. Configure terminal with `xcrun altool` authentication
+  5. Retry automated upload
+
+### Task 6.1.3.4: Configure TestFlight Build Settings
+
+**Success Criteria**: 
+- Build visible in TestFlight dashboard
+- TestFlight build metadata configured
+- Testing groups ready for invitation
+
+**Key Configuration Areas**:
+1. **Build Information**
+   - Version and build number verification
+   - Release notes for testers
+   - Test information and instructions
+
+2. **Testing Groups Setup**
+   - Internal testing group (team members)
+   - External testing group (beta testers)
+   - Test group composition and permissions
+
+3. **Compliance and Privacy**
+   - App Store review information completion
+   - Export compliance verification
+   - Privacy policy requirements
+
+### Task 6.1.3.5: Set Up Build Notes and Testing Instructions
+
+**Success Criteria**:
+- Comprehensive testing instructions provided
+- Clear feedback collection process established
+- Beta tester onboarding materials ready
+
+**Required Materials**:
+1. **Build Release Notes**
+   - What's new in this build
+   - Key features to test
+   - Known issues and limitations
+
+2. **Testing Instructions**
+   - How to download and install app
+   - Key functionality to focus on
+   - How to provide feedback
+
+3. **Communication Setup**
+   - Feedback collection method (TestFlight built-in, separate survey, etc.)
+   - Response timeline expectations
+   - Bug reporting process
+
+### Task 6.1.3.6: Submit Build for TestFlight Beta Testing (BETA ONLY - NO APP STORE)
+
+**Success Criteria**:
+- Build uploaded for TestFlight beta testing
+- Internal testing group activated
+- External testing group ready (after Apple review)
+- No App Store submission attempted
+
+**Beta Testing Process Details**:
+1. **Internal Testing Timeline**
+   - Immediate access for team members
+   - No Apple review required for internal group
+   - Team can start testing immediately
+
+2. **External Testing Prerequisites**
+   - Requires Apple Beta App Review (not App Store review)
+   - Typically much faster (24-48 hours vs weeks)
+   - Focused on beta testing guidelines vs full App Store requirements
+
+3. **Testing Group Setup**
+   - Start with internal testing (developers, family, close friends)
+   - Expand to external testers after internal validation
+   - Gather feedback before considering App Store submission
+
+### Risk Assessment and Mitigation
+
+**Potential Risks**:
+1. **Authentication Issues**
+   - Mitigation: Use manual upload method
+   - Backup: Application Loader if available
+
+2. **Review Rejection**
+   - Risk: Apple rejects build for compliance issues
+   - Mitigation: Pre-upload compliance checklist
+
+3. **Testing Group Management**
+   - Risk: Difficulty recruiting effective beta testers
+   - Mitigation: Start with internal team, expand gradually
+
+### Success Metrics
+
+**Completion Criteria**:
+- ✅ Archive successfully uploaded to App Store Connect
+- ✅ TestFlight build visible and functional
+- ✅ Internal testing group configured and active
+- ✅ Beta tester invitations sent
+- ✅ Feedback collection system operational
+
+**Next Phase Exit Criteria**:
+- Build approved by Apple for TestFlight testing
+- At least 5 active beta testers
+- First round of feedback collected
+- Issue tracking and resolution process established
 
 ### TestFlight Setup Analysis and Requirements
 
