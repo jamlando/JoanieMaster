@@ -371,10 +371,11 @@ class SupabaseService: ObservableObject {
             let user = authResponse.user
             
             // Store authentication tokens
-            let session = authResponse.session
-            try keychainService.storeAccessToken(session.accessToken)
-            try keychainService.storeRefreshToken(session.refreshToken)
-            try keychainService.storeUserID(user.id.uuidString)
+            if let session = authResponse.session {
+                try keychainService.storeAccessToken(session.accessToken)
+                try keychainService.storeRefreshToken(session.refreshToken)
+                try keychainService.storeUserID(user.id.uuidString)
+            }
             
             let userProfile = UserProfile(
                 id: user.id,
@@ -405,10 +406,11 @@ class SupabaseService: ObservableObject {
             let user = authResponse.user
             
             // Store authentication tokens
-            let session = authResponse.session
-            try keychainService.storeAccessToken(session.accessToken)
-            try keychainService.storeRefreshToken(session.refreshToken)
-            try keychainService.storeUserID(user.id.uuidString)
+            if let session = authResponse.session {
+                try keychainService.storeAccessToken(session.accessToken)
+                try keychainService.storeRefreshToken(session.refreshToken)
+                try keychainService.storeUserID(user.id.uuidString)
+            }
             
             // Extract full name from user metadata
             let fullName = user.userMetadata["full_name"] as? String ?? 
