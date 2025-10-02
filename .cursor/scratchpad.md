@@ -1473,7 +1473,8 @@ enum AuthenticationError: LocalizedError, Equatable {
 - ✅ **Set up pull request workflow** - Created feature branch `feature/testflight-setup` and pushed to GitHub
 - ✅ **Fixed CI/CD failures** - Resolved SwiftLint violations (726→19, 0 serious) and security scan issues (commit ee21f03)
 - ✅ **Created Release Archive** - Successfully archived app for TestFlight distribution (./build/Joanie.xcarchive)
-- ❌ **BLOCKER**: App Store Connect API authentication not configured - Upload blocked pending authentication setup
+- ✅ **BREAKTHROUGH**: Archive successfully created in Xcode Organizer: 'Joanie 10-2-25, 11.05.xcarchive'
+- 🔧 **ICON DEBUG**: Created exact 120x120 and 152x152 icons, updated Contents.json mappings
 - 🔄 **Next**: Need App Store Connect API authentication for upload automation
 - 💾 **PROGRESS SAVED**: Current state documented before computer restart
 
@@ -1497,12 +1498,141 @@ enum AuthenticationError: LocalizedError, Equatable {
 - Bundle ID: com.joanie.app
 - Platform: iOS arm64
 
-**🔄 Next Steps After Restart**:
-1. Resolve App Store Connect authentication (Options: Manual upload via Xcode Organizer, Set up API key, or use Application Loader)
-2. Upload archive to App Store Connect
-3. Configure TestFlight build settings
-4. Set up build notes and testing instructions
-5. Submit build for TestFlight review
+## 📋 PLANNER ANALYSIS: Remaining TestFlight Steps
+
+### Task 6.1.3.3: Upload Archive to App Store Connect
+
+**Current Situation Analysis**:
+- Archive successfully created at `./build/Joanie.xcarchive`
+- Authentication methods attempted and failed for automation
+- Manual upload approach recommended due to API authentication blocker
+
+**Strategy Options**:
+
+**🎯 Option A: Manual Upload via Xcode Organizer (RECOMMENDED)**
+- **Effort**: Low (5-10 minutes)
+- **Risk**: Low
+- **Dependencies**: Requires Xcode and App Store Connect account access
+- **Process**:
+  1. Open Xcode → Window → Organizer
+  2. Select "Archives" tab
+  3. Find "Joanie" archive (created date: 2025-10-02)
+  4. Click "Distribute App"
+  5. Select "App Store Connect" → Next
+  6. Select "Upload" → Next  
+  7. Choose automatic signing → Next
+  8. Confirm upload details → Upload
+
+**⚙️ Option B: Set up API Key Authentication**
+- **Effort**: Medium-High (15-30 minutes)
+- **Risk**: Medium (additional security setup)
+- **Dependencies**: App Store Connect admin access
+- **Process**:
+  1. App Store Connect → Users and Access → Keys → App Manager
+  2. Generate new API key
+  3. Download .p8 private key file
+  4. Configure terminal with `xcrun altool` authentication
+  5. Retry automated upload
+
+### Task 6.1.3.4: Configure TestFlight Build Settings
+
+**Success Criteria**: 
+- Build visible in TestFlight dashboard
+- TestFlight build metadata configured
+- Testing groups ready for invitation
+
+**Key Configuration Areas**:
+1. **Build Information**
+   - Version and build number verification
+   - Release notes for testers
+   - Test information and instructions
+
+2. **Testing Groups Setup**
+   - Internal testing group (team members)
+   - External testing group (beta testers)
+   - Test group composition and permissions
+
+3. **Compliance and Privacy**
+   - App Store review information completion
+   - Export compliance verification
+   - Privacy policy requirements
+
+### Task 6.1.3.5: Set Up Build Notes and Testing Instructions
+
+**Success Criteria**:
+- Comprehensive testing instructions provided
+- Clear feedback collection process established
+- Beta tester onboarding materials ready
+
+**Required Materials**:
+1. **Build Release Notes**
+   - What's new in this build
+   - Key features to test
+   - Known issues and limitations
+
+2. **Testing Instructions**
+   - How to download and install app
+   - Key functionality to focus on
+   - How to provide feedback
+
+3. **Communication Setup**
+   - Feedback collection method (TestFlight built-in, separate survey, etc.)
+   - Response timeline expectations
+   - Bug reporting process
+
+### Task 6.1.3.6: Submit Build for TestFlight Beta Testing (BETA ONLY - NO APP STORE)
+
+**Success Criteria**:
+- Build uploaded for TestFlight beta testing
+- Internal testing group activated
+- External testing group ready (after Apple review)
+- No App Store submission attempted
+
+**Beta Testing Process Details**:
+1. **Internal Testing Timeline**
+   - Immediate access for team members
+   - No Apple review required for internal group
+   - Team can start testing immediately
+
+2. **External Testing Prerequisites**
+   - Requires Apple Beta App Review (not App Store review)
+   - Typically much faster (24-48 hours vs weeks)
+   - Focused on beta testing guidelines vs full App Store requirements
+
+3. **Testing Group Setup**
+   - Start with internal testing (developers, family, close friends)
+   - Expand to external testers after internal validation
+   - Gather feedback before considering App Store submission
+
+### Risk Assessment and Mitigation
+
+**Potential Risks**:
+1. **Authentication Issues**
+   - Mitigation: Use manual upload method
+   - Backup: Application Loader if available
+
+2. **Review Rejection**
+   - Risk: Apple rejects build for compliance issues
+   - Mitigation: Pre-upload compliance checklist
+
+3. **Testing Group Management**
+   - Risk: Difficulty recruiting effective beta testers
+   - Mitigation: Start with internal team, expand gradually
+
+### Success Metrics
+
+**Completion Criteria**:
+- ✅ Archive successfully uploaded to App Store Connect
+- ✅ TestFlight build visible and functional
+- ✅ Internal testing group configured and active
+- ✅ Beta tester invitations sent
+- ✅ Feedback collection system operational
+
+**Next Phase Exit Criteria**:
+- Build approved by Apple for TestFlight testing
+- At least 5 active beta testers
+- First round of feedback collected
+- Issue tracking and resolution process established
 
 ### TestFlight Setup Analysis and Requirements
 

@@ -1,7 +1,9 @@
 import Foundation
-// import Supabase // TODO: Add Supabase dependency
+// import Supabase // TODO: Add Supabase dependency via Xcode Package Manager
+// import SupabaseAuth // TODO: Add Supabase dependency via Xcode Package Manager
 import Combine
 import UIKit
+import AuthenticationServices
 
 // MARK: - Placeholder Types (to be replaced with actual Supabase types)
 typealias SupabaseClient = Any
@@ -13,7 +15,6 @@ class SupabaseService: ObservableObject {
     
     let client: SupabaseClient
     private let keychainService = KeychainService.shared
-    private let sessionManager = SecureSessionManager()
     
     // MARK: - Published Properties
     @Published var isAuthenticated: Bool = false
@@ -34,39 +35,33 @@ class SupabaseService: ObservableObject {
     }
     
     private init() {
-        // Mock client for now
+        // Mock client for now - will be replaced with real Supabase client
         self.client = "mock_client" as Any
         
         setupAuthStateListener()
         setupSessionMonitoring()
         setupBackgroundRefresh()
         
-        // Initialize secure session manager
-        sessionManager.initializeSession()
-        
-        // Observe session manager state
-        sessionManager.$isAuthenticated
-            .sink { [weak self] isAuthenticated in
-                self?.isAuthenticated = isAuthenticated
-            }
-            .store(in: &cancellables)
-        
-        sessionManager.$currentUserID
-            .sink { [weak self] userID in
-                if let userID = userID {
-                    // TODO: Load user profile when userID changes
-                } else {
-                    self?.currentUser = nil
-                }
-            }
-            .store(in: &cancellables)
+        // Check for existing session on app launch
+        Task {
+            await checkExistingSession()
+        }
     }
     
     // MARK: - Auth State Management
     
     private func setupAuthStateListener() {
         // Mock auth state listener for now
-        // TODO: Implement real Supabase auth state listener
+        // TODO: Implement real Supabase auth state listener when dependency is added
+    }
+    
+    private func checkExistingSession() async {
+        // Mock implementation for now
+        await MainActor.run {
+            self.sessionState = .invalid
+            self.isAuthenticated = false
+            self.currentUser = nil
+        }
     }
     
     private func setupSessionMonitoring() {
@@ -300,15 +295,6 @@ class SupabaseService: ObservableObject {
             role: .parent
         )
         
-        // Store session in keychain
-        let accessToken = "mock_access_token_\(UUID().uuidString)"
-        let refreshToken = "mock_refresh_token_\(UUID().uuidString)"
-        let expiryDate = Date().addingTimeInterval(3600) // 1 hour from now
-        
-        try keychainService.storeAccessToken(accessToken)
-        try keychainService.storeRefreshToken(refreshToken)
-        try keychainService.storeUserID(userProfile.id.uuidString)
-        
         await MainActor.run {
             self.sessionState = .authenticated
             self.currentUser = userProfile
@@ -327,18 +313,6 @@ class SupabaseService: ObservableObject {
             role: .parent
         )
         
-        // Store session securely
-        let accessToken = "mock_access_token_\(UUID().uuidString)"
-        let refreshToken = "mock_refresh_token_\(UUID().uuidString)"
-        let expiresIn: TimeInterval = 3600 // 1 hour from now
-        
-        sessionManager.storeSession(
-            accessToken: accessToken,
-            refreshToken: refreshToken,
-            userID: userProfile.id.uuidString,
-            expiresIn: expiresIn
-        )
-        
         await MainActor.run {
             self.sessionState = .authenticated
             self.currentUser = userProfile
@@ -349,7 +323,7 @@ class SupabaseService: ObservableObject {
     
     func signInWithApple() async throws -> UserProfile {
         // TODO: Implement Apple Sign-In integration
-        // This requires additional setup with Apple Sign-In SDK
+        // This requires additional setup with Apple Sign-In SDK and Supabase
         throw SupabaseError.notImplemented
     }
     
@@ -359,9 +333,6 @@ class SupabaseService: ObservableObject {
         
         // End any background tasks
         endBackgroundTask()
-        
-        // Clear session securely
-        sessionManager.clearSession()
         
         // Clear any cached data
         await clearCachedData()

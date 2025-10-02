@@ -13,12 +13,14 @@
     {
       "idiom" : "iphone",
       "scale" : "2x",
-      "size" : "29x29"
+      "size" : "29x29",
+      "filename" : "appicon58x58.png"
     },
     {
       "idiom" : "iphone",
       "scale" : "3x",
-      "size" : "29x29"
+      "size" : "29x29",
+      "filename" : "icon-87x87.png"
     },
     {
       "idiom" : "iphone",
@@ -33,12 +35,14 @@
     {
       "idiom" : "iphone",
       "scale" : "2x",
-      "size" : "60x60"
+      "size" : "60x60",
+      "filename" : "icon-iphone-120x120.png"
     },
     {
       "idiom" : "iphone",
       "scale" : "3x",
-      "size" : "60x60"
+      "size" : "60x60",
+      "filename" : "appicon180x180.png"
     },
     {
       "idiom" : "ipad",
@@ -73,7 +77,8 @@
     {
       "idiom" : "ipad",
       "scale" : "2x",
-      "size" : "76x76"
+      "size" : "76x76",
+      "filename" : "icon-ipad-152x152.png"
     },
     {
       "idiom" : "ipad",
@@ -85,6 +90,12 @@
       "scale" : "1x",
       "size" : "1024x1024",
       "filename" : "joanie_icon.png"
+    },
+    {
+      "size" : "1024x1024",
+      "idiom" : "universal",
+      "filename" : "Frame 1.svg",
+      "scale" : "1x"
     }
   ],
   "info" : {
