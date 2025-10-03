@@ -60,7 +60,12 @@ class SupabaseService: ObservableObject {
                         
                         // Load user profile from current user
                         Task {
-                            await self.loadCurrentUser()
+                            do {
+                                let session = try await client.auth.session
+                                await self.loadUserProfile(from: session.user)
+                            } catch {
+                                Logger.shared.error("Failed to load user profile: \(error)")
+                            }
                         }
                         
                     case .signedOut:
@@ -330,9 +335,7 @@ class SupabaseService: ObservableObject {
     private func loadCurrentUser() async {
         do {
             let session = try await client.auth.session
-            let user = session.user
-            
-            await loadUserProfile(from: user)
+            await loadUserProfile(from: session.user)
         } catch {
             await MainActor.run {
                 self.currentUser = nil

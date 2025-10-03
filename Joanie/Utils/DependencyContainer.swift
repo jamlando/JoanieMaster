@@ -48,28 +48,17 @@ class DependencyContainer: ObservableObject {
         var resendService: Any? // EmailService?
         var emailServiceManager: Any // EmailServiceManager
         
-        if EmailConfiguration.isResendEnabled {
-            // Create Resend service
-            let resendConfiguration = EmailConfiguration.resendConfig
-            resendService = "ResendService" // Placeholder
-            
-            // Create service manager with both services
-            emailServiceManager = "EmailServiceManager" // EmailServiceManager(
-                // primaryService: resendService!,
-                // fallbackService: supabaseEmailService
-            // )
-            
-            Logger.shared.info("Email services created with Resend")
-            
-        } else {
-            // Create service manager with only fallback service
-            emailServiceManager = "EmailServiceManager" // EmailServiceManager(
-                // primaryService: supabaseEmailService,
-                // fallbackService: supabaseEmailService
-            // )
-            
-            Logger.shared.info("Email services created with Supabase fallback only")
-        }
+        // For now, always use placeholder approach regardless of configuration
+        // This avoids dependency on EmailConfiguration which may not be available in CI
+        resendService = "ResendService" // Placeholder
+        
+        // Create service manager with placeholder services
+        emailServiceManager = "EmailServiceManager" // EmailServiceManager(
+            // primaryService: resendService!,
+            // fallbackService: supabaseEmailService
+        // )
+        
+        Logger.shared.info("Email services created with placeholder approach")
         
         self.emailServiceManager = emailServiceManager
         self.resendService = resendService
@@ -206,15 +195,17 @@ extension DependencyContainer {
             return imageProcessor as? T
         case is Logger.Type:
             return logger as? T
-        case is Any.Type: // EmailServiceManager.Type:
-            return emailServiceManager as? T
-        case is Any.Type: // ResendService.Type:
-            return resendService as? T
-        case is Any.Type: // SupabaseEmailService.Type:
-            return supabaseEmailService as? T
-        case is Any.Type: // EmailTemplateManager.Type:
-            return emailTemplateManager as? T
         default:
+            // Handle email services (currently using placeholder strings)
+            if String(describing: T.self).contains("EmailServiceManager") {
+                return emailServiceManager as? T
+            } else if String(describing: T.self).contains("ResendService") {
+                return resendService as? T
+            } else if String(describing: T.self).contains("SupabaseEmailService") {
+                return supabaseEmailService as? T
+            } else if String(describing: T.self).contains("EmailTemplateManager") {
+                return emailTemplateManager as? T
+            }
             return nil
         }
     }
