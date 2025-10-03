@@ -29,7 +29,7 @@ struct ImagePicker: UIViewControllerRepresentable {
             self.parent = parent
         }
         
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
             if let editedImage = info[.editedImage] as? UIImage {
                 parent.selectedImage = editedImage
             } else if let originalImage = info[.originalImage] as? UIImage {
@@ -74,7 +74,7 @@ struct CameraView: UIViewControllerRepresentable {
             self.parent = parent
         }
         
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
             if let editedImage = info[.editedImage] as? UIImage {
                 parent.capturedImage = editedImage
             } else if let originalImage = info[.originalImage] as? UIImage {

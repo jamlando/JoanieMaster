@@ -31,7 +31,7 @@ class MockEmailService: ObservableObject, EmailService {
     // MARK: - Testing Configuration
     private var customResponses: [EmailTemplate: EmailResult] = [:]
     private var failureProbabilities: [EmailTemplate: Double] = [:]
-    private var callbackMetrics: MockCallbackMetrics = MockCallbackMetrics()
+    private var callbackMetrics = MockCallbackMetrics()
     
     // MARK: - Callbacks for Testing
     var onEmailSent: ((EmailMessage) -> Void)?
@@ -205,8 +205,8 @@ class MockEmailService: ObservableObject, EmailService {
         onServiceStatusChanged?(status)
         
             Logger.shared.info("Mock service status changed", metadata: [
-            "status": status.rawValue
-        ])
+                "status": status.rawValue
+            ])
     }
     
     /// Simulate network timeouts
@@ -217,8 +217,8 @@ class MockEmailService: ObservableObject, EmailService {
         simulatedDelay = timeout
         
             Logger.shared.info("Mock service timeout configured", metadata: [
-            "timeout": timeout
-        ])
+                "timeout": timeout
+            ])
     }
     
     /// Simulate rate limiting
@@ -227,8 +227,8 @@ class MockEmailService: ObservableObject, EmailService {
         failureError = .rateLimited(retryAfter)
         
             Logger.shared.info("Mock service rate limit configured", metadata: [
-            "retryAfter": retryAfter
-        ])
+                "retryAfter": retryAfter
+            ])
     }
     
     /// Simulate authentication failure

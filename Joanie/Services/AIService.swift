@@ -195,7 +195,7 @@ class AIService: ObservableObject, ServiceProtocol {
                 return
             }
             
-            let request = VNGenerateAttentionBasedSaliencyImageRequest { request, error in
+            let request = VNGenerateAttentionBasedSaliencyImageRequest { _, error in
                 if let error = error {
                     continuation.resume(throwing: error)
                     return

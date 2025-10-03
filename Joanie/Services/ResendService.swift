@@ -340,17 +340,12 @@ class ResendService: ObservableObject, EmailService {
         // Basic HTML validation (ensure no suspicious content)
         let suspiciousPatterns = ["<script", "javascript:", "onload=", "onerror="]
         
-        for pattern in suspiciousPatterns {
-            if html.lowercased().contains(pattern.lowercased()) {
-                throw EmailError.invalidHTMLContent("Content contains potentially unsafe \(pattern) element")
-            }
+        for pattern in suspiciousPatterns where html.lowercased().contains(pattern.lowercased()) {
+            throw EmailError.invalidHTMLContent("Content contains potentially unsafe \(pattern) element")
         }
     }
     
     private func validateConfiguration() {
-        
-
-
         guard configuration.isValid else {
             serviceStatus = .disabled
             logger.error("Resend configuration is invalid", metadata: [

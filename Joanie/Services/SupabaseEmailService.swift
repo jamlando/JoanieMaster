@@ -229,7 +229,7 @@ class SupabaseEmailService: ObservableObject, EmailService {
         }
     }
     
-    // MARK: -Private Methods
+    // MARK: - Private Methods
     
     private func executeEmailSending(_ email: EmailMessage) async throws -> EmailResult {
         // For simplicity, we'll simulate email sending

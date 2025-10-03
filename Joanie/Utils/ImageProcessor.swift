@@ -14,8 +14,8 @@ class ImageProcessor: ObservableObject {
     @Published var processingProgress: Double = 0.0
     
     // MARK: - Constants
-    private let maxImageSize: CGSize = CGSize(width: 1920, height: 1920)
-    private let thumbnailSize: CGSize = CGSize(width: 300, height: 300)
+    private let maxImageSize = CGSize(width: 1920, height: 1920)
+    private let thumbnailSize = CGSize(width: 300, height: 300)
     private let compressionQuality: CGFloat = 0.8
     private let maxFileSize: Int = 10 * 1024 * 1024 // 10MB
     
@@ -486,11 +486,9 @@ class ImageProcessor: ObservableObject {
             "<?php", "<?=", "#!/bin/", "#!/usr/bin/"
         ]
         
-        for pattern in suspiciousPatterns {
-            if dataString.lowercased().contains(pattern.lowercased()) {
-                logError("SECURITY: Suspicious pattern detected: \(pattern)")
-                return true
-            }
+        for pattern in suspiciousPatterns where dataString.lowercased().contains(pattern.lowercased()) {
+            logError("SECURITY: Suspicious pattern detected: \(pattern)")
+            return true
         }
         
         return false

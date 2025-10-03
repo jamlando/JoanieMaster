@@ -675,7 +675,7 @@ class EmailTemplateManager: ObservableObject {
     private func calculateCacheHitRate() -> Double {
         // Simplified cache hit rate calculation
         // In a real implementation, this would track actual cache hits vs misses
-        return cachedTemplates.count > 0 ? 0.85 : 0.0 // Placeholder 85% hit rate
+        return !cachedTemplates.isEmpty ? 0.85 : 0.0 // Placeholder 85% hit rate
     }
 }
 

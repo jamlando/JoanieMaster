@@ -169,5 +169,5 @@ struct RegisterView: View {
 }
 
 #Preview {
-    RegisterView(authService: AuthService(supabaseService: SupabaseService.shared))
+    RegisterView(authService: AuthService(supabaseService: SupabaseService.shared, emailServiceManager: DependencyContainer.shared.emailServiceManager))
 }

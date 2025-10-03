@@ -332,7 +332,7 @@ struct MultiPhotoPicker: UIViewControllerRepresentable {
                 group.enter()
                 
                 if result.itemProvider.canLoadObject(ofClass: UIImage.self) {
-                    result.itemProvider.loadObject(ofClass: UIImage.self) { object, error in
+                    result.itemProvider.loadObject(ofClass: UIImage.self) { object, _ in
                         if let image = object as? UIImage {
                             loadedImages.append(image)
                         }

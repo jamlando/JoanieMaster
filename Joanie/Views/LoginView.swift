@@ -108,11 +108,10 @@ struct LoginView: View {
                     }
                     .padding(.horizontal, 24)
                     
-                    // Apple Sign In Button (placeholder)
+                    // Apple Sign In Button
                     Button(action: {
                         Task {
-                            // TODO: Implement Apple Sign-In
-                            print("Apple Sign-In not yet implemented")
+                            await viewModel.signInWithApple()
                         }
                     }) {
                         HStack {
@@ -163,7 +162,6 @@ struct LoginView: View {
     }
 }
 
-
 #Preview {
-    LoginView(authService: AuthService(supabaseService: SupabaseService.shared))
+    LoginView(authService: AuthService(supabaseService: SupabaseService.shared, emailServiceManager: DependencyContainer.shared.emailServiceManager))
 }

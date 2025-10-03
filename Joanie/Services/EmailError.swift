@@ -23,7 +23,6 @@ enum EmailError: LocalizedError, Equatable {
     case invalidTemplate(String)
     case templateNotFound(String)
     
-    
     // MARK: - Network & API Errors
     case networkError(String)
     case timeoutError

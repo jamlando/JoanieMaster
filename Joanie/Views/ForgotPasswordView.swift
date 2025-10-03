@@ -119,5 +119,5 @@ struct ForgotPasswordView: View {
 }
 
 #Preview {
-    ForgotPasswordView(authService: AuthService(supabaseService: SupabaseService.shared))
+    ForgotPasswordView(authService: AuthService(supabaseService: SupabaseService.shared, emailServiceManager: DependencyContainer.shared.emailServiceManager))
 }

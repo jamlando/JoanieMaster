@@ -19,10 +19,10 @@ class EmailAnalyticsService: ObservableObject {
     private let keychainService: KeychainService?
     
     // MARK: - Published Analytics
-    @Published var emailStatistics: EmailStatistics = EmailStatistics()
-    @Published var serviceHealthMetrics: ServiceHealthMetrics = ServiceHealthMetrics()
-    @Published var performanceMetrics: PerformanceMetrics = PerformanceMetrics()
-    @Published var errorAnalytics: ErrorAnalytics = ErrorAnalytics()
+    @Published var emailStatistics = EmailStatistics()
+    @Published var serviceHealthMetrics = ServiceHealthMetrics()
+    @Published var performanceMetrics = PerformanceMetrics()
+    @Published var errorAnalytics = ErrorAnalytics()
     
     // MARK: - Analytics Storage
     private var emailEvents: [EmailAnalyticsEvent] = []
@@ -413,10 +413,8 @@ class EmailAnalyticsService: ObservableObject {
     private func trimArraysToMaxSize() {
         let arrays = [emailEvents, serviceHealthHistory, performanceHistory, errorHistory]
         
-        for array in arrays {
-            if array.count > maxStoredEvents {
-                array.removeFirst(array.count - maxStoredEvents)
-            }
+        for array in arrays where array.count > maxStoredEvents {
+            array.removeFirst(array.count - maxStoredEvents)
         }
     }
     
@@ -658,14 +656,14 @@ struct EmailStatistics: Codable {
     var serviceBreakdown: [EmailServiceType: Int] = [:]
     var templateBreakdown: [EmailTemplate: Int] = [:]
     var period: AnalyticsPeriod = .allTime
-    var lastUpdated: Date = Date()
+    var lastUpdated = Date()
 }
 
 struct ServiceHealthMetrics: Codable {
-    var overallHealthPercentage: Double = 100.0
+    var overallHealthPercentage = 100.0
     var serviceHealth: [EmailServiceType: ServiceHealthSummary] = [:]
-    var averageResponseTime: TimeInterval = 0.0
-    var lastHealthCheck: Date = Date()
+    var averageResponseTime = 0.0
+    var lastHealthCheck = Date()
     
     mutating func updateWithEvent(_ event: HealthCheckEvent) {
         lastHealthCheck = event.timestamp
@@ -699,7 +697,7 @@ struct PerformanceMetrics: Codable {
     var averageResponseTime: TimeInterval = 0.0
     var operationsBreakdown: [EmailOperation: Double] = [:]
     var slowestOperations: [EmailOperation] = []
-    var lastUpdated: Date = Date()
+    var lastUpdated = Date()
     
     mutating func updateWithEvent(_ event: PerformanceEvent) {
         lastUpdated = Date()
@@ -719,7 +717,7 @@ struct ErrorAnalytics: Codable {
     var totalErrors: Int = 0
     var errorBreakdown: [EmailError: Int] = [:]
     var errorTrends: [Date: Int] = [: ]
-    var lastUpdated: Date = Date()
+    var lastUpdated = Date()
     
     mutating func incrementError(_ error: EmailError) {
         totalErrors += 1

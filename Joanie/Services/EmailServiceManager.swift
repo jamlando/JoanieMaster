@@ -405,13 +405,13 @@ enum ServiceHealthStatus: String, CaseIterable {
 }
 
 struct ServiceHealthReport {
-    var primaryHealth: EmailServiceHealth = EmailServiceHealth(
+    var primaryHealth = EmailServiceHealth(
         isHealthy: false,
         responseTime: nil,
         lastChecked: Date(),
         error: EmailError.serviceHealthCheckFailed("primary")
     )
-    var fallbackHealth: EmailServiceHealth = EmailServiceHealth(
+    var fallbackHealth = EmailServiceHealth(
         isHealthy: false,
         responseTime: nil,
         lastChecked: Date(),

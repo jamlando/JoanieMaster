@@ -133,7 +133,7 @@ class EmailIntegrationTests: XCTestCase {
         
         // Then
         XCTAssertNotNil(healthReport)
-        XCTAssertTrue(healthReport.servicesChecked.count > 0)
+        XCTAssertFalse(healthReport.servicesChecked.isEmpty)
     }
     
     func testEmailServiceMetrics() {
@@ -278,8 +278,8 @@ class EmailIntegrationTests: XCTestCase {
         let hotDuration = hotEndTime.timeIntervalSince(hotStartTime)
         
         // Then
-        XCTAssertTrue(hotDuration < coldDuration * 0.5, 
-                     "Cached template should be significantly faster: cold: \(coldDuration)s, hot: \(hotDuration)s")
+        XCTAssertTrue(hotDuration < coldDuration * 0.5,
+                      "Cached template should be significantly faster: cold: \(coldDuration)s, hot: \(hotDuration)s")
     }
     
     // MARK: - Real-World Scenario Tests

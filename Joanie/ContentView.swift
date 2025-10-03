@@ -7,7 +7,7 @@ struct ContentView: View {
     
     init() {
         // Initialize with a placeholder - will be updated in onAppear
-        self._appViewModel = StateObject(wrappedValue: AppViewModel(authService: AuthService(supabaseService: SupabaseService.shared)))
+        self._appViewModel = StateObject(wrappedValue: AppViewModel(authService: AuthService(supabaseService: SupabaseService.shared, emailServiceManager: DependencyContainer.shared.emailServiceManager)))
     }
     
     var body: some View {
@@ -878,7 +878,7 @@ struct ProfileCompletionSheet: View {
         
         do {
             // Upload image if selected
-            var finalAvatarURL: String? = nil
+            var finalAvatarURL: String?
             if let profileImage = profileImage {
                 finalAvatarURL = try await uploadProfileImage(profileImage)
             }

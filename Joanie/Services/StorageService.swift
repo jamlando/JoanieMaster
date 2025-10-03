@@ -531,14 +531,18 @@ class StorageService: ObservableObject, ServiceProtocol {
     
     // MARK: - ServiceProtocol
     
-    func reset() {
-        isUploading = false
-        uploadProgress = 0.0
-        errorMessage = nil
+    nonisolated func reset() {
+        Task { @MainActor in
+            isUploading = false
+            uploadProgress = 0.0
+            errorMessage = nil
+        }
     }
     
-    func configureForTesting() {
-        reset()
+    nonisolated func configureForTesting() {
+        Task { @MainActor in
+            reset()
+        }
     }
     
     // MARK: - Helper Methods
