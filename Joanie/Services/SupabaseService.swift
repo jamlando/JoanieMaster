@@ -52,6 +52,7 @@ class SupabaseService: ObservableObject {
         // Listen for authentication state changes
         Task {
             for await state in await client.auth.authStateChanges {
+            for await state in client.auth.authStateChanges {
                 await MainActor.run {
                     switch state.event {
                     case .signedIn:
@@ -65,6 +66,9 @@ class SupabaseService: ObservableObject {
                                 await self.loadUserProfile(from: session.user)
                             } catch {
                                 Logger.shared.error("Failed to load user profile: \(error)")
+                        if let user = client.auth.currentUser {
+                            Task {
+                                await self.loadUserProfile(from: user)
                             }
                         }
                         
@@ -341,6 +345,14 @@ class SupabaseService: ObservableObject {
                 self.currentUser = nil
             }
         }
+        guard let user = client.auth.currentUser else {
+            await MainActor.run {
+                self.currentUser = nil
+            }
+            return
+        }
+        
+        await loadUserProfile(from: user)
     }
     
     private func loadUserProfile(from user: User) async {
@@ -366,6 +378,11 @@ class SupabaseService: ObservableObject {
     private func storeAuthenticationTokens(from authResponse: Any, user: User) throws {
         // Use extremely safe approach - avoid all session property access
         Logger.shared.info("SupabaseService: Storing authentication data for user \(user.id)")
+        
+        // For now, just store user ID and log that we're handling authentication
+        // In a real app with Supabase, we'd need to determine the correct API structure
+        try keychainService.storeUserID(user.id.uuidString)
+        
         
         // For now, just store user ID and log that we're handling authentication
         // In a real app with Supabase, we'd need to determine the correct API structure
@@ -496,6 +513,8 @@ class SupabaseService: ObservableObject {
         // For now, return nil since we can't access session synchronously
         // TODO: Consider making this async or using a different approach
         return nil
+        // Get current user from Supabase client
+        return client.auth.currentUser
     }
     
     func resetPassword(email: String) async throws {
