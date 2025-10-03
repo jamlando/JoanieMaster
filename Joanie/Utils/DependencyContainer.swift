@@ -16,6 +16,12 @@ class DependencyContainer: ObservableObject {
     private(set) var imageProcessor: ImageProcessor
     private(set) var logger: Logger
     
+    // MARK: - Email Services
+    private(set) var emailServiceManager: EmailServiceManager
+    private(set) var resendService: EmailService?
+    private(set) var supabaseEmailService: SupabaseEmailService
+    private(set) var emailTemplateManager: EmailTemplateManager
+    
     // MARK: - App State
     private(set) var appState: AppState
     
@@ -28,13 +34,25 @@ class DependencyContainer: ObservableObject {
     // MARK: - Initialization
     
     private init() {
-        // Initialize services
+        // Initialize core services
         self.supabaseService = SupabaseService.shared
-        self.authService = AuthService(supabaseService: supabaseService)
+        self.logger = Logger.shared
+        self.imageProcessor = ImageProcessor()
+        
+        // Initialize email services
+        let emailServices = createEmailServices()
+        self.emailServiceManager = emailServices.manager
+        self.resendService = emailServices.resendService
+        self.supabaseEmailService = emailServices.supabaseService
+        self.emailTemplateManager = emailServices.templateManager
+        
+        // Initialize business services with email integration
+        self.authService = AuthService(
+            supabaseService: supabaseService,
+            emailServiceManager: emailServiceManager
+        )
         self.storageService = StorageService(supabaseService: supabaseService)
         self.aiService = AIService()
-        self.imageProcessor = ImageProcessor()
-        self.logger = Logger.shared
         
         // Initialize app state
         self.appState = AppState()
@@ -68,9 +86,70 @@ class DependencyContainer: ObservableObject {
     
     private func setupServiceDependencies() {
         // Configure services with their dependencies
-        // authService.configure(with: supabaseService) // TODO: Implement service configuration
-        // storageService.configure(with: supabaseService) // TODO: Implement service configuration
-        // aiService.configure(with: supabaseService) // TODO: Implement service configuration
+        // Email services are configured during initialization
+        Logger.shared.info("DependencyContainer initialised with email services", metadata: [
+            "resendEnabled": EmailConfiguration.isResendEnabled,
+            "fallbackEnabled": EmailConfiguration.isFallbackEnabled,
+            "emailManagerType": String(describing: type(of: emailServiceManager))
+        ])
+    }
+    
+    // MARK: - Email Service Creation
+    
+    private func createEmailServices() -> EmailServicesContainer {
+        // Create fallback service (Supabase Email Service)
+        let supabaseEmailService = SupabaseEmailService(supabaseService: supabaseService)
+        let templateManager = EmailTemplateManager()
+        
+        // Create primary service (Resend Service) if enabled
+        var resendService: EmailService?
+        var emailServiceManager: EmailServiceManager
+        
+        if EmailConfiguration.isResendEnabled {
+            // Create Resend service
+            let resendConfiguration = EmailConfiguration.resendConfig
+            let dependencies = EmailServiceDependencies(
+                retryService: RetryService.shared,
+                logger: logger,
+                keychainService: KeychainService.shared
+            )
+            
+            resendService = ResendService(
+                configuration: resendConfiguration,
+                dependencies: dependencies
+            )
+            
+            // Create service manager with both services
+            emailServiceManager = EmailServiceManager(
+                primaryService: resendService!,
+                fallbackService: supabaseEmailService
+            )
+            
+            Logger.shared.info("Email services created with Resend", metadata: [
+                "primaryService": "ResendService",
+                "fallbackService": "SupabaseEmailService",
+                "resendDomain": Secrets.resendDomain
+            ])
+            
+        } else {
+            // Create service manager with only fallback service
+            emailServiceManager = EmailServiceManager(
+                primaryService: supabaseEmailService,
+                fallbackService: supabaseEmailService
+            )
+            
+            Logger.shared.info("Email services created with Supabase fallback only", metadata: [
+                "primaryService": "SupabaseEmailService",
+                "reason": "Resend disabled"
+            ])
+        }
+        
+        return EmailServicesContainer(
+            manager: emailServiceManager,
+            resendService: resendService,
+            supabaseService: supabaseEmailService,
+            templateManager: templateManager
+        )
     }
     
     // MARK: - Public Methods
@@ -84,6 +163,13 @@ class DependencyContainer: ObservableObject {
         authService.reset()
         storageService.reset()
         aiService.reset()
+        
+        // Reset email services (clear statistics)
+        if let resendService = resendService as? ResendService {
+            resendService.resetDailyStatistics()
+        }
+        supabaseEmailService.resetDailyStatistics()
+        emailServiceManager.resetStatistics()
         
         // Reinitialize view models
         homeViewModel = HomeViewModel(
@@ -113,6 +199,18 @@ class DependencyContainer: ObservableObject {
         authService.configureForTesting()
         storageService.configureForTesting()
         aiService.configureForTesting()
+        
+        // Configure email services for testing (use MockEmailService)
+        let mockEmailService = MockEmailService()
+        self.emailServiceManager = EmailServiceManager(
+            primaryService: mockEmailService,
+            fallbackService: mockEmailService
+        )
+        
+        Logger.shared.info("DependencyContainer configured for testing", metadata: [
+            "emailService": "MockEmailService",
+            "testingMode": "enabled"
+        ])
     }
 }
 
@@ -142,6 +240,14 @@ extension DependencyContainer {
             return imageProcessor as? T
         case is Logger.Type:
             return logger as? T
+        case is EmailServiceManager.Type:
+            return emailServiceManager as? T
+        case is ResendService.Type:
+            return resendService as? T
+        case is SupabaseEmailService.Type:
+            return supabaseEmailService as? T
+        case is EmailTemplateManager.Type:
+            return emailTemplateManager as? T
         default:
             return nil
         }
@@ -231,3 +337,22 @@ extension DependencyContainer {
      }
  }
  */
+
+// MARK: - Email Services Container
+
+/// Container for email service initialization results
+struct EmailServicesContainer {
+    let manager: EmailServiceManager
+    let resendService: EmailService?
+    let supabaseService: SupabaseEmailService
+    let templateManager: EmailTemplateManager
+    
+    var summary: [String: Any] {
+        return [
+            "managerType": String(describing: type(of: manager)),
+            "hasResendService": resendService != nil,
+            "supabaseServiceType": String(describing: type(of: supabaseService)),
+            "templateManagerType": String(describing: type(of: templateManager))
+        ]
+    }
+}

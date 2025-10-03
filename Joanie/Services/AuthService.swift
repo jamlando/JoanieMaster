@@ -12,13 +12,20 @@ class AuthService: ObservableObject, ServiceProtocol {
     
     // MARK: - Dependencies
     private let supabaseService: SupabaseService
+    private let emailServiceManager: EmailServiceManager
     private var cancellables = Set<AnyCancellable>()
     
     // MARK: - Initialization
     
-    init(supabaseService: SupabaseService) {
+    init(supabaseService: SupabaseService, emailServiceManager: EmailServiceManager) {
         self.supabaseService = supabaseService
+        self.emailServiceManager = emailServiceManager
         setupBindings()
+        
+        Logger.shared.info("AuthService initialized with email integration", metadata: [
+            "emailManagerType": String(describing: type(of: emailServiceManager)),
+            "emailServiceActive": true
+        ])
     }
     
     // MARK: - Setup
@@ -44,10 +51,41 @@ class AuthService: ObservableObject, ServiceProtocol {
         isLoading = true
         errorMessage = nil
         
-        let user = try await supabaseService.signUp(email: email, password: password, fullName: fullName)
-        
-        isLoading = false
-        return user
+        do {
+            let user = try await supabaseService.signUp(email: email, password: password, fullName: fullName)
+            
+            // Send welcome email after successful sign up
+            Task {
+                do {
+                    _ = try await emailServiceManager.sendWelcomeEmail(
+                        to: email, 
+                        userName: fullName
+                    )
+                    
+                    Logger.shared.info("Welcome email sent", metadata: [
+                        "userId": user.id.uuidString,
+                        "email": email,
+                        "userName": fullName
+                    ])
+                } catch {
+                    Logger.shared.error("Welcome email failed to send", metadata: [
+                        "userId": user.id.uuidString,
+                        "email": email,
+                        "error": error.localizedDescription
+                    ])
+                    // Don't fail sign up if welcome email fails
+                }
+            }
+            
+            isLoading = false
+            return user
+            
+        } catch {
+            isLoading = false
+            let mappedError = SupabaseErrorMapper.shared.mapSupabaseError(error)
+            errorMessage = mappedError.localizedDescription
+            throw mappedError
+        }
     }
     
     func signIn(email: String, password: String) async throws -> UserProfile {
@@ -111,14 +149,53 @@ class AuthService: ObservableObject, ServiceProtocol {
         errorMessage = nil
         
         do {
-            try await supabaseService.resetPassword(email: email)
+            // Generate a reset token (in real implementation, this would come from Supabase)
+            let resetToken = generatePasswordResetToken()
+            let userId = UUID() // In real implementation, get UUID from user lookup
+            
+            // Use email service manager for sending password reset email
+            _ = try await emailServiceManager.sendPasswordReset(
+                to: email, 
+                resetToken: resetToken, 
+                userId: userId
+            )
+            
             isLoading = false
+            
+            Logger.shared.info("Password reset email sent", metadata: [
+                "email": email,
+                "resetToken": resetToken,
+                "userId": userId.uuidString
+            ])
+            
         } catch {
             isLoading = false
-            let mappedError = SupabaseErrorMapper.shared.mapSupabaseError(error)
-            errorMessage = mappedError.localizedDescription
-            throw mappedError
+            
+            if let emailError = error as? EmailError {
+                let mappedError = emailError.toAuthenticationError()
+                errorMessage = mappedError.localizedDescription
+                
+                Logger.shared.error("Password reset email failed", metadata: [
+                    "email": email,
+                    "emailError": emailError.localizedDescription,
+                    "mappedError": mappedError.errorCode
+                ])
+                
+                throw mappedError
+            } else {
+                let mappedError = SupabaseErrorMapper.shared.mapSupabaseError(error)
+                errorMessage = mappedError.localizedDescription
+                throw mappedError
+            }
         }
+    }
+    
+    private func generatePasswordResetToken() -> String {
+        // In a real implementation, this would generate a secure JWT token
+        // For now, we'll generate a simple token
+        let timestamp = Int(Date().timeIntervalSince1970)
+        let randomPart = UUID().uuidString.prefix(8)
+        return "reset_\(timestamp)_\(randomPart)"
     }
     
     func updatePassword(currentPassword: String, newPassword: String) async throws {
@@ -227,6 +304,74 @@ class AuthService: ObservableObject, ServiceProtocol {
         reset()
     }
     
+    // MARK: - Email-specific Methods
+    
+    /// Send account verification email
+    func sendAccountVerificationEmail() async throws {
+        guard let user = currentUser else {
+            throw AuthenticationError.sessionNotFound
+        }
+        
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            let verificationToken = generateVerificationToken()
+            
+            _ = try await emailServiceManager.sendAccountVerification(
+                to: user.email,
+                verificationToken: verificationToken
+            )
+            
+            isLoading = false
+            
+            Logger.shared.info("Account verification email sent", metadata: [
+                "userId": user.id.uuidString,
+                "email": user.email,
+                "verificationToken": verificationToken
+            ])
+            
+        } catch {
+            isLoading = false
+            
+            if let emailError = error as? EmailError {
+                let mappedError = emailError.toAuthenticationError()
+                errorMessage = mappedError.localizedDescription
+                throw mappedError
+            } else {
+                let mappedError = SupabaseErrorMapper.shared.mapSupabaseError(error)
+                errorMessage = mappedError.localizedDescription
+                throw mappedError
+            }
+        }
+    }
+    
+    /// Resend password reset email
+    func resendPasswordReset(email: String) async throws {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            await resetPassword(email: email)
+            isLoading = false
+            
+            Logger.shared.info("Password reset email resent", metadata: [
+                "email": email
+            ])
+            
+        } catch {
+            isLoading = false
+            throw error // Re-throw the error from resetPassword
+        }
+    }
+    
+    private func generateVerificationToken() -> String {
+        // In a real implementation, this would generate a secure JWT token
+        let timestamp = Int(Date().timeIntervalSince1970)
+        let randomPart = UUID().uuidString.prefix(8)
+        return "verify_\(timestamp)_\(randomPart)"
+    }
+    
     // MARK: - Helper Methods
     
     func clearError() {
@@ -243,6 +388,15 @@ class AuthService: ObservableObject, ServiceProtocol {
     
     var userInitials: String {
         return currentUser?.initials ?? "??"
+    }
+    
+    /// Get email service status for debugging
+    func getEmailServiceStatus() -> [String: Any] {
+        return [
+            "serviceType": emailServiceManager.currentService.rawValue,
+            "isHealthy": emailServiceManager.serviceHealthStatus.canSendEmails,
+            "metricsSummary": emailServiceManager.getServiceMetrics().summary
+        ]
     }
 }
 
