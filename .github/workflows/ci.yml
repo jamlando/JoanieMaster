@@ -51,10 +51,38 @@ jobs:
             static let openAIAPIKey = ProcessInfo.processInfo.environment["OPENAI_API_KEY"] ?? "your-openai-api-key-here"
             static let xAIAPIKey = ProcessInfo.processInfo.environment["XAI_API_KEY"] ?? "your-xai-api-key-here"
             
+            // MARK: - Email Service Configuration
+            // SECURITY: Use environment variables in production
+            static let resendAPIKey = ProcessInfo.processInfo.environment["RESEND_API_KEY"] ?? "your-resend-api-key-here"
+            static let resendDomain = ProcessInfo.processInfo.environment["RESEND_DOMAIN"] ?? "whalesharksolutions.com"
+            static let emailServiceProvider = ProcessInfo.processInfo.environment["EMAIL_SERVICE_PROVIDER"] ?? "resend"
+            static let emailFromAddress = ProcessInfo.processInfo.environment["EMAIL_FROM_ADDRESS"] ?? "noreply@whalesharksolutions.com"
+            static let emailFromName = ProcessInfo.processInfo.environment["EMAIL_FROM_NAME"] ?? "Joanie"
+            
+            // MARK: - Resend API Configuration
+            static let resendAPIBaseURL = ProcessInfo.processInfo.environment["RESEND_API_BASE_URL"] ?? "https://api.resend.com"
+            static let resendTimeoutSeconds = Int(ProcessInfo.processInfo.environment["RESEND_TIMEOUT_SECONDS"] ?? "30") ?? 30
+            static let resendMaxRetries = Int(ProcessInfo.processInfo.environment["RESEND_MAX_RETRIES"] ?? "3") ?? 3
+            static let resendEnableSSL = ProcessInfo.processInfo.environment["RESEND_ENABLE_SSL"] != "false" // Default true
+            
+            // MARK: - Email Address Configuration
+            static let resendMarketingFromAddress = ProcessInfo.processInfo.environment["RESEND_MARKETING_FROM"] ?? "hello@whalesharksolutions.com"
+            static let resendSupportFromAddress = ProcessInfo.processInfo.environment["RESEND_SUPPORT_FROM"] ?? "support@whalesharksolutions.com"
+            static let resendNoReplyFromAddress = ProcessInfo.processInfo.environment["RESEND_NOREPLY_FROM"] ?? "noreply@whalesharksolutions.com"
+            
+            // MARK: - Email Service Flags
+            static let resendEmailEnabled = ProcessInfo.processInfo.environment["RESEND_EMAIL_ENABLED"] == "true"
+            static let emailFallbackEnabled = ProcessInfo.processInfo.environment["EMAIL_FALLBACK_ENABLED"] == "true"
+            
             // MARK: - App Configuration
             // SECURITY: Use environment variables in production
             static let appEnvironment = ProcessInfo.processInfo.environment["APP_ENVIRONMENT"] ?? "development"
             static let debugMode = ProcessInfo.processInfo.environment["DEBUG_MODE"] == "true"
+            
+            // MARK: - Computed Properties
+            static var isProduction: Bool {
+                return appEnvironment.lowercased() == "production"
+            }
         }
         EOF
         
