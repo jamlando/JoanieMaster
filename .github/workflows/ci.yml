@@ -7,14 +7,14 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-14
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
     - name: Select Xcode version
-      run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+      run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
       
     - name: Cache Swift Package Manager dependencies
       uses: actions/cache@v3
@@ -23,6 +23,12 @@ jobs:
         key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
         restore-keys: |
           ${{ runner.os }}-spm-
+          
+    - name: Clear Swift Package Manager cache
+      run: |
+        # Clear any cached Swift Package Manager data that might cause issues
+        rm -rf ~/Library/Developer/Xcode/DerivedData
+        rm -rf ~/Library/Caches/org.swift.swiftpm
           
     - name: Create Secrets.swift for CI
       run: |
@@ -70,11 +76,14 @@ jobs:
           clean build
           
   lint:
-    runs-on: macos-latest
+    runs-on: macos-14
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      
+    - name: Select Xcode version
+      run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
       
     - name: Install SwiftLint
       run: |
@@ -85,7 +94,7 @@ jobs:
         swiftlint lint --reporter github-actions-logging
         
   security-scan:
-    runs-on: macos-latest
+    runs-on: macos-14
     
     steps:
     - name: Checkout code
