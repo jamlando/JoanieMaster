@@ -2,19 +2,24 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, staging, feature/* ]
+    branches: [ main, develop, staging ]
   pull_request:
+    branches: [ main, develop, staging ]
+    types: [opened, synchronize, reopened]
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
     - name: Select Xcode version
-      run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+      run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+      
+    - name: Show Xcode version
+      run: xcodebuild -version
       
     - name: Cache Swift Package Manager dependencies
       uses: actions/cache@v3
@@ -104,14 +109,14 @@ jobs:
           clean build
           
   lint:
-    runs-on: macos-14
+    runs-on: macos-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
     - name: Select Xcode version
-      run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+      run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
       
     - name: Install SwiftLint
       run: |
@@ -122,7 +127,7 @@ jobs:
         swiftlint lint --reporter github-actions-logging
         
   security-scan:
-    runs-on: macos-14
+    runs-on: macos-latest
     
     steps:
     - name: Checkout code
