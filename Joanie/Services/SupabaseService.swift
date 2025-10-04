@@ -51,7 +51,6 @@ class SupabaseService: ObservableObject {
     private func setupAuthStateListener() {
         // Listen for authentication state changes
         Task {
-            for await state in await client.auth.authStateChanges {
             for await state in client.auth.authStateChanges {
                 await MainActor.run {
                     switch state.event {
@@ -66,9 +65,10 @@ class SupabaseService: ObservableObject {
                                 await self.loadUserProfile(from: session.user)
                             } catch {
                                 Logger.shared.error("Failed to load user profile: \(error)")
-                        if let user = client.auth.currentUser {
-                            Task {
-                                await self.loadUserProfile(from: user)
+                                // Fallback: try to load from current user
+                                if let user = client.auth.currentUser {
+                                    await self.loadUserProfile(from: user)
+                                }
                             }
                         }
                         
