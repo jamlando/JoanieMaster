@@ -320,3 +320,4 @@ echo "Environment: $APP_ENVIRONMENT"
 
 This configuration ensures your Resend email service is production-ready with proper security, monitoring, and error handling in place.
 
+
