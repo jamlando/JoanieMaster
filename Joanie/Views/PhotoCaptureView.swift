@@ -325,7 +325,7 @@ struct CaptureStepView: View {
                 }
         }
         .sheet(isPresented: $showingImagePicker) {
-            ImagePicker(selectedImage: .constant(nil), sourceType: .photoLibrary)
+            SingleImagePicker(selectedImage: .constant(nil), sourceType: .photoLibrary)
                 .onDisappear {
                     // Check if image was selected
                     if let image = selectedImage {
@@ -475,7 +475,7 @@ struct PreviewStepView: View {
             CameraView(capturedImage: .constant(nil))
         }
         .sheet(isPresented: $showingImagePicker) {
-            ImagePicker(selectedImage: .constant(nil), sourceType: .photoLibrary)
+            SingleImagePicker(selectedImage: .constant(nil), sourceType: .photoLibrary)
         }
         .sheet(isPresented: $showingCropView) {
             CropView(image: image) { croppedImage in
