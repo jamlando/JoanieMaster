@@ -1,0 +1,184 @@
+# Product Requirements Document (PRD): Joanie App - Core Signup and Story Generation Feature
+
+## 1. Document Information
+- Product Name: Joanie (iOS Mobile App)
+- Feature Name: Core Signup Experience and Logged-In Story Generation Flow
+- Version: 1.0
+- Date: October 07, 2025
+- Author: Grok 4 (AI Assistant)
+- Stakeholders: Product Manager, Engineering Team, Design Team, QA Team
+- Assumptions: The app already includes basic infrastructure such as user authentication backend, navigation framework, and integration with iOS permissions APIs. Focus is solely on this feature set; existing app components (e.g., navigation bar, settings) are leveraged where applicable.
+
+## 2. Overview
+Joanie is an iOS app that helps parents preserve and transform their children's drawings into interactive bedtime stories. This feature focuses on enhancing the core user onboarding (signup/login) and the primary logged-in experience: adding a child profile, uploading/selecting drawings from the photo library or camera, and generating personalized stories using the Grok API.
+
+The goal is to create a seamless, engaging flow that converts new users into active ones by quickly demonstrating value through story generation. The feature emphasizes simplicity, privacy (via permissions), and magic (AI-generated stories based on real drawings).
+
+### Key User Flow
+1. Onboarding/Landing: Attract users with marketing content and prompt signup/login.
+2. Authentication: Simple signup or login.
+3. Post-Login Setup: Request permissions, add child, select/upload drawings.
+4. Story Generation: Use selected drawings to generate a story via Grok API.
+
+This feature integrates with the Grok API for story generation, which takes uploaded images of drawings and produces a narrative complete with embedded pictures.
+
+## 3. Goals and Objectives
+- Business Goals:
+  - Increase user acquisition by 20% through an appealing landing screen.
+  - Boost retention by enabling quick value delivery (story generation within first session).
+  - Encourage repeat usage by associating stories with ongoing child drawings.
+- User Goals:
+  - New users: Easily sign up, set up a child profile, and generate their first story.
+  - Logged-in users: Upload/select drawings and create/share stories effortlessly.
+- Success Metrics:
+  - Signup completion rate > 80%.
+  - First-story generation within 5 minutes of signup > 70%.
+  - User engagement: Average stories generated per user in first week > 2.
+  - App Store ratings impact: Monitor for feedback on onboarding and AI features.
+
+## 4. User Personas
+- Primary Persona: Parent (age 25-45), tech-savvy but time-constrained, wants to preserve kids' creativity without clutter.
+- Secondary Persona: Grandparent or caregiver sharing stories digitally.
+
+## 5. Use Cases/User Stories
+### Use Case 1: New User Signup and First Story
+- As a new user, I want to see an engaging landing page so I understand the app's value.
+- As a new user, I want to sign up quickly with basic info so I can access features.
+- As a logged-in user, I want to add a child profile so drawings can be associated.
+- As a logged-in user, I want to grant photo/camera permissions so I can upload drawings.
+- As a logged-in user, I want to select photos and generate a story so I can share it with my child.
+
+### Use Case 2: Existing User Login and Story Creation
+- As an existing user, I want to log in easily so I can access my profile and create new stories.
+- As a logged-in user, I want to upload new drawings from library or camera and generate stories.
+
+### Edge Cases
+- User denies permissions: Graceful fallback with explanation and re-prompt option.
+- No drawings available: Prompt to take new photos or skip.
+- API failure: Show error message and retry option.
+- Multiple children: Allow adding/selecting from multiple child profiles.
+
+## 6. Functional Requirements
+### 6.1 Screens and Flows
+#### Screen 1: Landing/Onboarding Screen
+- Purpose: Sell the app and funnel to auth.
+- UI Elements:
+  - Hero Text: "Turn your kids' drawings into a bedtime story that can continue with all the new drawings your child creates."
+  - Carousel (above buttons): Auto-rotating slides showcasing core features, e.g.:
+    - Slide 1: "Tired of throwing away your child's drawings?"
+    - Slide 2: "Upload to Joanie and create stories to share with your child."
+    - Slide 3: Example story preview (static mockup).
+  - Buttons: "Sign Up" (primary CTA) and "Login" (secondary).
+- Navigation: Sign Up → Sign Up Screen; Login → Login Screen.
+- Behavior: Carousel loops every 5 seconds; swipeable.
+
+#### Screen 2: Sign Up Screen
+- Purpose: Collect user info for account creation.
+- UI Elements:
+  - Fields: First Name (text), Last Name (text), Email (email), Password (secure text).
+  - Button: "Sign Up" (validates fields: email format, password strength ≥8 chars).
+  - Link: "Already have an account? Login."
+- Backend: POST to auth endpoint; on success, auto-login and redirect to Profile Screen.
+- Error Handling: Display inline errors (e.g., "Invalid email").
+
+#### Screen 2 Alternate: Login Screen
+- Purpose: Authenticate existing users.
+- UI Elements:
+  - Fields: Email (email), Password (secure text).
+  - Button: "Login."
+  - Link: "Don't have an account? Sign Up." / "Forgot Password?" (email reset flow, out of scope but stubbed).
+- Backend: POST to login endpoint; on success, redirect to Profile Screen or Photo Permission if first login.
+- Error Handling: "Incorrect credentials."
+
+#### Screen 3: Photo Library Permission Screen (Post-Login)
+- Purpose: Request access to scan/upload drawings.
+- Trigger: On first login (or if permissions not granted).
+- UI Elements:
+  - Explanation: "Allow Joanie access to your photo library to find and upload your child's drawings."
+  - Buttons: "Allow" (requests iOS photo library permission), "Skip" (proceeds but limits functionality).
+- Behavior: If allowed, scan library for potential drawings (optional: use ML to suggest kid-art-like images); redirect to Profile if needed.
+- iOS Integration: Use PHPhotoLibrary.requestAuthorization().
+
+#### Screen 4: Profile Page
+- Purpose: View/edit user info and manage child profiles.
+- UI Elements:
+  - User Info: Display first/last name, email; edit button.
+  - Child Section: List of children (name, age, avatar); "Add Child" button.
+  - Add Child Modal: Fields for Child Name, Age (optional), Avatar (from library or default).
+- Navigation: From here, link to Upload Page or Photo Library.
+- Behavior: Required to add at least one child before story generation.
+
+#### Additional Screen: Upload Page
+- Purpose: Select or capture drawings for a child.
+- UI Elements:
+  - Child Selector: Dropdown to associate with a specific child.
+  - Options: "Select from Library" (opens iOS photo picker), "Take Photo" (requests camera permission if needed).
+  - Preview Grid: Thumbnails of selected images.
+  - Button: "Next" → Story Generation Screen.
+- iOS Integration: UIImagePickerController for library; AVCapture for camera.
+- Behavior: Limit selection to 5-10 images per story; auto-upload to backend.
+
+#### Additional Screen: Photo Library
+- Purpose: Browse and manage uploaded drawings.
+- UI Elements:
+  - Grid View: Thumbnails of all uploaded images, grouped by child.
+  - Filters: By child, date.
+  - Actions: Select multiple → Generate Story; Delete.
+- Navigation: Accessible from Profile or navigation bar.
+
+#### Screen 5: Story Generation Screen
+- Purpose: Generate and view AI story.
+- UI Elements:
+  - Selected Images: Horizontal scrollable previews.
+  - Button: "Magic Button" (labeled "Generate Story").
+  - Loading State: Spinner with "Creating magic..." message.
+  - Story View: Generated text narrative with embedded images (from drawings).
+  - Actions: Share (iOS share sheet: email, messages), Save to Profile, Continue Story (for future drawings).
+- Backend Integration: Call Grok API with image URLs; API input: Array of image data; Output: JSON with story text and image placements.
+- Behavior: On click, upload images if not already, call API, render result. Handle API errors with retry.
+
+### 6.2 Permissions
+- Photo Library: Read/write access for selection and storage.
+- Camera: For direct capture.
+- Handle iOS privacy prompts; store permission status in app storage.
+
+### 6.3 API Integration
+- Grok API: Endpoint for story generation.
+  - Request: POST /generate-story { images: [base64 or URLs], child_name: string, theme: optional }.
+  - Response: { story_text: string, image_placements: array }.
+- Assume API handles image analysis (e.g., detecting drawings) and narrative creation.
+
+## 7. Non-Functional Requirements
+- Performance: Story generation < 30 seconds; app responsive on iOS 15+.
+- Security: Encrypt passwords; store images securely (e.g., AWS S3); comply with COPPA for child data.
+- Accessibility: VoiceOver support; high contrast; large tap targets.
+- Localization: English only initially; prepare for future.
+- Offline Support: Permissions and basic navigation offline; story generation requires internet.
+- Scalability: Handle 10k users; API rate limits.
+
+## 8. UI/UX Guidelines
+- Design System: Use app's existing styles (e.g., warm colors for kids' theme).
+- Animations: Smooth transitions (e.g., carousel fade); magic button pulse.
+- Wireframes: (High-level text description; actual designs to be created.)
+  - Landing: Full-screen hero with bottom buttons.
+  - Forms: Clean, minimal with auto-focus on first field.
+  - Story View: Scrollable card with text and images interleaved.
+- User Feedback: Toasts for success/errors; progress indicators.
+
+## 9. Technical Considerations
+- Platform: iOS (Swift/SwiftUI).
+- Dependencies: Alamofire for networking; Kingfisher for image caching; Grok API SDK if available.
+- Testing: Unit tests for auth; UI tests for flows; API mocks for generation.
+- Risks: API downtime → Fallback to sample stories; Permission denials → Educational modals.
+
+## 10. Dependencies and Timeline
+- Dependencies: Backend auth service; Grok API access key.
+- Milestones:
+  - Design: 1 week.
+  - Development: 4 weeks.
+  - QA: 2 weeks.
+  - Launch: Post-beta testing.
+
+## 11. Appendix
+- Open Questions: How does "continue with new drawings" work? (E.g., append to existing story via API.)
+- Future Enhancements: Voice narration; multi-language stories; sharing via app links.

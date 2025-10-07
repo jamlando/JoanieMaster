@@ -23,13 +23,15 @@ class StorageService: ObservableObject, ServiceProtocol {
     // MARK: - Dependencies
     private let supabaseService: SupabaseService
     private let imageProcessor: ImageProcessor
+    private let notificationWrapperService: NotificationWrapperService
     private var cancellables = Set<AnyCancellable>()
     
     // MARK: - Initialization
     
-    init(supabaseService: SupabaseService) {
+    init(supabaseService: SupabaseService, notificationWrapperService: NotificationWrapperService = NotificationWrapperService(notificationToggleService: NotificationToggleService())) {
         self.supabaseService = supabaseService
         self.imageProcessor = ImageProcessor()
+        self.notificationWrapperService = notificationWrapperService
         setupBindings()
         setupNetworkMonitoring()
     }
@@ -113,6 +115,9 @@ class StorageService: ObservableObject, ServiceProtocol {
             completedUploads.append(uploadTask)
             currentUpload = nil
             
+            // Send notification for artwork completion
+            await sendArtworkCompletionNotification(for: artwork)
+            
             return artwork
             
         } catch {
@@ -190,6 +195,9 @@ class StorageService: ObservableObject, ServiceProtocol {
             isUploading = false
             completedUploads.append(uploadTask)
             currentUpload = nil
+            
+            // Send notification for artwork completion
+            await sendArtworkCompletionNotification(for: artwork)
             
             return artwork
             
@@ -543,6 +551,19 @@ class StorageService: ObservableObject, ServiceProtocol {
         Task { @MainActor in
             reset()
         }
+    }
+    
+    // MARK: - Notification Methods
+    
+    private func sendArtworkCompletionNotification(for artwork: ArtworkUpload) async {
+        // Get child name from artwork (this would need to be passed or retrieved)
+        let childName = "Your child" // TODO: Get actual child name
+        let artworkTitle = artwork.title ?? "New artwork"
+        
+        await notificationWrapperService.sendArtworkCompletionNotification(
+            childName: childName,
+            artworkTitle: artworkTitle
+        )
     }
     
     // MARK: - Helper Methods

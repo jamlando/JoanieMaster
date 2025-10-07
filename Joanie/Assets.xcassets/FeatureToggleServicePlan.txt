@@ -1,0 +1,42 @@
+# Optimized Feature Toggle Service Implementation Plan
+
+## Overview
+This plan implements a scalable, performant, and secure Feature Toggle Service for the Joanie iOS app, starting with a notification toggle. The architecture supports future expansion to user-specific, group-specific, and A/B testing toggles, optimized for iOS best practices.
+
+## Architecture Design
+
+### Core Components
+#### 1. FeatureToggle Protocol
+```swift
+protocol FeatureToggle {
+    var key: String { get }
+    var isEnabled: Bool { get }
+    var scope: ToggleScope { get }
+    var lastUpdated: Date { get }
+    var metadata: [String: Any]? { get }
+    var experimentId: String? { get } // Added for A/B testing
+}
+
+enum ToggleScope {
+    case global
+    case user(userId: String)
+    case group(groupId: String)
+    case device(deviceId: String)
+}
+```
+
+#### 2. FeatureToggleService
+- **Local Storage**: `UserDefaults` for simple toggles, `Core Data` with indexing for complex data.
+- **Remote Sync**: Supabase with `URLSession` background configuration and JWT authentication.
+- **Caching Strategy**: In-memory cache with 24-hour TTL, persisted to `UserDefaults`/`Core Data`.
+- **Conflict Resolution**: Last-write-wins with timestamp comparison, fallback to default states.
+
+#### 3. FeatureToggleManager
+- **Centralized Access**: Single source of truth using `Combine` or `Swift Concurrency`.
+- **Performance Optimization**: Lazy loading, batch operations, max 1ms toggle checks.
+- **Error Handling**: Graceful degradation, user alerts for sync failures, Sentry logging.
+- **Observable Pattern**: `@Published` properties for SwiftUI updates.
+
+#### 4. Notification Toggle Implementation
+- **Wrapper Service**: `NotificationWrapperService` checks toggle and system permissions.
+- **Permission Integration**: Respects `UNUserNotificationCenter`

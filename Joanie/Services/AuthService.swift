@@ -13,16 +13,18 @@ class AuthService: ObservableObject, ServiceProtocol {
     // MARK: - Dependencies
     private let supabaseService: SupabaseService
     private let emailServiceManager: Any // EmailServiceManager
+    private let notificationWrapperService: NotificationWrapperService
     private var cancellables = Set<AnyCancellable>()
     
     // MARK: - Initialization
     
-    init(supabaseService: SupabaseService, emailServiceManager: Any) {
+    init(supabaseService: SupabaseService, emailServiceManager: Any, notificationWrapperService: NotificationWrapperService = NotificationWrapperService(notificationToggleService: NotificationToggleService())) {
         self.supabaseService = supabaseService
         self.emailServiceManager = emailServiceManager
+        self.notificationWrapperService = notificationWrapperService
         setupBindings()
         
-        Logger.shared.info("AuthService initialized with email integration")
+        Logger.shared.info("AuthService initialized with email and notification integration")
     }
     
     // MARK: - Setup
@@ -60,6 +62,9 @@ class AuthService: ObservableObject, ServiceProtocol {
                     // )
                     
                     Logger.shared.info("Welcome email sent")
+                    
+                    // Send welcome notification
+                    await sendWelcomeNotification(for: user)
                 } catch {
                     Logger.shared.error("Welcome email failed to send")
                     // Don't fail sign up if welcome email fails
@@ -82,6 +87,9 @@ class AuthService: ObservableObject, ServiceProtocol {
         errorMessage = nil
         
         let user = try await supabaseService.signIn(email: email, password: password)
+        
+        // Send sign-in notification
+        await sendSignInNotification(for: user)
         
         isLoading = false
         return user
@@ -113,6 +121,9 @@ class AuthService: ObservableObject, ServiceProtocol {
             
             // Clear any local state
             await clearLocalState()
+            
+            // Send sign-out notification
+            await sendSignOutNotification()
             
             isLoading = false
             Logger.shared.info("AuthService: User signed out successfully")
@@ -863,5 +874,64 @@ enum AuthenticationError: LocalizedError, Equatable {
         }
         
         return context
+    }
+}
+
+// MARK: - Notification Methods
+
+extension AuthService {
+    private func sendWelcomeNotification(for user: UserProfile) async {
+        let success = await notificationWrapperService.sendNotification(
+            title: "🎉 Welcome to Joanie!",
+            body: "Hi \(user.displayName), welcome to your child's creative journey!",
+            identifier: "welcome_\(user.id.uuidString)",
+            userInfo: [
+                "type": "welcome",
+                "user_id": user.id.uuidString,
+                "user_name": user.displayName
+            ]
+        )
+        
+        if success {
+            Logger.shared.info("Welcome notification sent for user: \(user.displayName)")
+        } else {
+            Logger.shared.info("Welcome notification not sent (toggle disabled or permission denied)")
+        }
+    }
+    
+    private func sendSignInNotification(for user: UserProfile) async {
+        let success = await notificationWrapperService.sendNotification(
+            title: "✅ Signed In",
+            body: "Welcome back, \(user.displayName)!",
+            identifier: "signin_\(user.id.uuidString)",
+            userInfo: [
+                "type": "signin",
+                "user_id": user.id.uuidString,
+                "user_name": user.displayName
+            ]
+        )
+        
+        if success {
+            Logger.shared.info("Sign-in notification sent for user: \(user.displayName)")
+        } else {
+            Logger.shared.info("Sign-in notification not sent (toggle disabled or permission denied)")
+        }
+    }
+    
+    private func sendSignOutNotification() async {
+        let success = await notificationWrapperService.sendNotification(
+            title: "👋 Signed Out",
+            body: "You've been signed out successfully",
+            identifier: "signout_\(UUID().uuidString)",
+            userInfo: [
+                "type": "signout"
+            ]
+        )
+        
+        if success {
+            Logger.shared.info("Sign-out notification sent")
+        } else {
+            Logger.shared.info("Sign-out notification not sent (toggle disabled or permission denied)")
+        }
     }
 }
