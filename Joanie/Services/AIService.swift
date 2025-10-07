@@ -12,12 +12,19 @@ class AIService: ObservableObject, ServiceProtocol {
     
     // MARK: - Dependencies
     private let supabaseService: SupabaseService
+    private let notificationWrapperService: NotificationWrapperService
+    private let progressTrackingService: ProgressTrackingService
     private var cancellables = Set<AnyCancellable>()
     
     // MARK: - Initialization
     
-    init() {
+    init(
+        notificationWrapperService: NotificationWrapperService = NotificationWrapperService(notificationToggleService: NotificationToggleService()),
+        progressTrackingService: ProgressTrackingService = ProgressTrackingService()
+    ) {
         self.supabaseService = SupabaseService.shared
+        self.notificationWrapperService = notificationWrapperService
+        self.progressTrackingService = progressTrackingService
         setupBindings()
     }
     
@@ -67,12 +74,47 @@ class AIService: ObservableObject, ServiceProtocol {
             
             isAnalyzing = false
             analysisProgress = 1.0
+            
+            // Send notification about AI analysis completion
+            await sendAIAnalysisNotification(
+                type: "artwork_analysis",
+                childName: child.name,
+                success: true,
+                analysis: finalAnalysis
+            )
+            
+            // Update progress tracking based on AI analysis
+            try await progressTrackingService.analyzeAndUpdateProgress(
+                artwork: ArtworkUpload(
+                    id: UUID(),
+                    childId: child.id,
+                    userId: child.userId,
+                    title: "AI Analysis",
+                    description: "Generated from AI analysis",
+                    artworkType: .drawing,
+                    imageURL: "",
+                    createdAt: Date(),
+                    updatedAt: Date()
+                ),
+                aiAnalysis: finalAnalysis,
+                child: child
+            )
+            
             return finalAnalysis
             
         } catch {
             isAnalyzing = false
             analysisProgress = 0.0
             errorMessage = error.localizedDescription
+            
+            // Send notification about AI analysis failure
+            await sendAIAnalysisNotification(
+                type: "artwork_analysis",
+                childName: child.name,
+                success: false,
+                error: error.localizedDescription
+            )
+            
             throw error
         }
     }
@@ -108,6 +150,15 @@ class AIService: ObservableObject, ServiceProtocol {
             
             isAnalyzing = false
             analysisProgress = 1.0
+            
+            // Send notification about story generation completion
+            await sendAIAnalysisNotification(
+                type: "story_generation",
+                childName: child.name,
+                success: true,
+                storyTitle: story.title
+            )
+            
             return story
             
         } catch {
@@ -420,6 +471,45 @@ enum AIServiceError: LocalizedError {
             return "Please check your internet connection"
         case .unknown:
             return "Please try again or contact support"
+        }
+    }
+}
+
+// MARK: - Notification Methods
+
+extension AIService {
+    private func sendAIAnalysisNotification(
+        type: String,
+        childName: String,
+        success: Bool,
+        analysis: AIAnalysis? = nil,
+        storyTitle: String? = nil,
+        error: String? = nil
+    ) async {
+        let title = success ? "🤖 AI Analysis Complete" : "❌ AI Analysis Failed"
+        let body = success ? 
+            "\(type) completed for \(childName)" : 
+            "Failed to complete \(type) for \(childName)"
+        
+        let success = await notificationWrapperService.sendNotification(
+            title: title,
+            body: body,
+            identifier: "ai_\(type)_\(UUID().uuidString)",
+            userInfo: [
+                "type": "ai_notification",
+                "ai_type": type,
+                "child_name": childName,
+                "success": success,
+                "story_title": storyTitle ?? "",
+                "error": error ?? "",
+                "confidence": analysis?.confidence ?? 0.0
+            ]
+        )
+        
+        if success {
+            Logger.shared.info("AI notification sent: \(type) for \(childName)")
+        } else {
+            Logger.shared.info("AI notification not sent (toggle disabled or permission denied)")
         }
     }
 }

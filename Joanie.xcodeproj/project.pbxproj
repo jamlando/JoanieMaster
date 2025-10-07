@@ -50,6 +50,15 @@
 		A123456789012345678906A /* Joanie/Utils/ValidationUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A123456789012345678906B /* Joanie/Utils/ValidationUtils.swift */; };
 		A123456789012345678906C /* Joanie/Utils/KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A123456789012345678906D /* Joanie/Utils/KeychainService.swift */; };
 		A123456789012345678906E /* Joanie/Config/Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = A123456789012345678906F /* Joanie/Config/Secrets.swift */; };
+		A123456789012345678907A /* Joanie/Models/FeatureToggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = A123456789012345678907B /* Joanie/Models/FeatureToggle.swift */; };
+		A123456789012345678907C /* Joanie/Services/FeatureToggleService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A123456789012345678907D /* Joanie/Services/FeatureToggleService.swift */; };
+		A123456789012345678907E /* Joanie/Services/FeatureToggleManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A123456789012345678907F /* Joanie/Services/FeatureToggleManager.swift */; };
+		A123456789012345678908A /* Joanie/Services/ToggleScopeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A123456789012345678908B /* Joanie/Services/ToggleScopeManager.swift */; };
+		A123456789012345678908C /* Joanie/Services/NotificationToggleService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A123456789012345678908D /* Joanie/Services/NotificationToggleService.swift */; };
+		A123456789012345678908E /* Joanie/Services/FeatureToggleAnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A123456789012345678908F /* Joanie/Services/FeatureToggleAnalyticsService.swift */; };
+		A123456789012345678908G /* Joanie/Services/ProgressTrackingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A123456789012345678908H /* Joanie/Services/ProgressTrackingService.swift */; };
+		A123456789012345678909A /* Joanie/Tests/FeatureToggleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A123456789012345678909B /* Joanie/Tests/FeatureToggleTests.swift */; };
+		A123456789012345678909C /* Joanie/Tests/FeatureToggleIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A123456789012345678909D /* Joanie/Tests/FeatureToggleIntegrationTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -92,6 +101,15 @@
 		A123456789012345678906B /* Joanie/Utils/ValidationUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Joanie/Utils/ValidationUtils.swift; sourceTree = SOURCE_ROOT; };
 		A123456789012345678906D /* Joanie/Utils/KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Joanie/Utils/KeychainService.swift; sourceTree = SOURCE_ROOT; };
 		A123456789012345678906F /* Joanie/Config/Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Joanie/Config/Secrets.swift; sourceTree = SOURCE_ROOT; };
+		A123456789012345678907B /* Joanie/Models/FeatureToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Joanie/Models/FeatureToggle.swift; sourceTree = SOURCE_ROOT; };
+		A123456789012345678907D /* Joanie/Services/FeatureToggleService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Joanie/Services/FeatureToggleService.swift; sourceTree = SOURCE_ROOT; };
+		A123456789012345678907F /* Joanie/Services/FeatureToggleManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Joanie/Services/FeatureToggleManager.swift; sourceTree = SOURCE_ROOT; };
+		A123456789012345678908B /* Joanie/Services/ToggleScopeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Joanie/Services/ToggleScopeManager.swift; sourceTree = SOURCE_ROOT; };
+		A123456789012345678908D /* Joanie/Services/NotificationToggleService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Joanie/Services/NotificationToggleService.swift; sourceTree = SOURCE_ROOT; };
+		A123456789012345678908F /* Joanie/Services/FeatureToggleAnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Joanie/Services/FeatureToggleAnalyticsService.swift; sourceTree = SOURCE_ROOT; };
+		A123456789012345678908H /* Joanie/Services/ProgressTrackingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Joanie/Services/ProgressTrackingService.swift; sourceTree = SOURCE_ROOT; };
+		A123456789012345678909B /* Joanie/Tests/FeatureToggleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Joanie/Tests/FeatureToggleTests.swift; sourceTree = SOURCE_ROOT; };
+		A123456789012345678909D /* Joanie/Tests/FeatureToggleIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Joanie/Tests/FeatureToggleIntegrationTests.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -129,6 +147,7 @@
 				A1234567890123456789019F /* Joanie/Models/Story.swift */,
 				A123456789012345678902B /* Joanie/Models/UserProfile.swift */,
 				A123456789012345678902D /* Joanie/Models/COPPACompliance.swift */,
+				A123456789012345678907B /* Joanie/Models/FeatureToggle.swift */,
 				A123456789012345678904B /* Joanie/Utils/Config.swift */,
 				A123456789012345678904D /* Joanie/Utils/CoreDataManager.swift */,
 				A123456789012345678904F /* Joanie/Utils/DateFormatters.swift */,
@@ -142,6 +161,12 @@
 				A123456789012345678902F /* Joanie/Services/AIService.swift */,
 				A123456789012345678903B /* Joanie/Services/AuthService.swift */,
 				A123456789012345678903D /* Joanie/Services/StorageService.swift */,
+				A123456789012345678907D /* Joanie/Services/FeatureToggleService.swift */,
+				A123456789012345678907F /* Joanie/Services/FeatureToggleManager.swift */,
+				A123456789012345678908B /* Joanie/Services/ToggleScopeManager.swift */,
+				A123456789012345678908D /* Joanie/Services/NotificationToggleService.swift */,
+				A123456789012345678908F /* Joanie/Services/FeatureToggleAnalyticsService.swift */,
+				A123456789012345678908H /* Joanie/Services/ProgressTrackingService.swift */,
 				A1234567890123456789014D /* Joanie/ViewModels/AppViewModel.swift */,
 				A1234567890123456789014F /* Joanie/ViewModels/AuthenticationViewModel.swift */,
 				A1234567890123456789015B /* Joanie/ViewModels/GalleryViewModel.swift */,
@@ -279,6 +304,7 @@
 				A1234567890123456789019E /* Joanie/Models/Story.swift in Sources */,
 				A123456789012345678902A /* Joanie/Models/UserProfile.swift in Sources */,
 				A123456789012345678902C /* Joanie/Models/COPPACompliance.swift in Sources */,
+				A123456789012345678907A /* Joanie/Models/FeatureToggle.swift in Sources */,
 				A123456789012345678904A /* Joanie/Utils/Config.swift in Sources */,
 				A123456789012345678904C /* Joanie/Utils/CoreDataManager.swift in Sources */,
 				A123456789012345678904E /* Joanie/Utils/DateFormatters.swift in Sources */,
@@ -292,6 +318,12 @@
 				A123456789012345678902E /* Joanie/Services/AIService.swift in Sources */,
 				A123456789012345678903A /* Joanie/Services/AuthService.swift in Sources */,
 				A123456789012345678903C /* Joanie/Services/StorageService.swift in Sources */,
+				A123456789012345678907C /* Joanie/Services/FeatureToggleService.swift in Sources */,
+				A123456789012345678907E /* Joanie/Services/FeatureToggleManager.swift in Sources */,
+				A123456789012345678908A /* Joanie/Services/ToggleScopeManager.swift in Sources */,
+				A123456789012345678908C /* Joanie/Services/NotificationToggleService.swift in Sources */,
+				A123456789012345678908E /* Joanie/Services/FeatureToggleAnalyticsService.swift in Sources */,
+				A123456789012345678908G /* Joanie/Services/ProgressTrackingService.swift in Sources */,
 				A1234567890123456789014C /* Joanie/ViewModels/AppViewModel.swift in Sources */,
 				A1234567890123456789014E /* Joanie/ViewModels/AuthenticationViewModel.swift in Sources */,
 				A1234567890123456789015A /* Joanie/ViewModels/GalleryViewModel.swift in Sources */,

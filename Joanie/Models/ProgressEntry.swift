@@ -86,6 +86,22 @@ struct ProgressEntry: Codable, Identifiable, Equatable {
     }
 }
 
+// MARK: - AI Skill Analysis
+
+struct AISkill: Codable {
+    let skill: String
+    let confidence: Double
+    let level: SkillLevel
+    let notes: String?
+    
+    init(skill: String, confidence: Double, level: SkillLevel, notes: String? = nil) {
+        self.skill = skill
+        self.confidence = confidence
+        self.level = level
+        self.notes = notes
+    }
+}
+
 enum SkillLevel: String, Codable, CaseIterable {
     case beginner = "beginner"
     case developing = "developing"

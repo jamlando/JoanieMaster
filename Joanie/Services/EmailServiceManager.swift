@@ -16,6 +16,7 @@ class EmailServiceManager: ObservableObject, EmailService {
     private let primaryService: EmailService
     private let fallbackService: EmailService
     private let serviceSelector: EmailServiceSelector
+    private let notificationWrapperService: NotificationWrapperService
     private let logger: Logger
     
     // MARK: - Published Properties
@@ -35,11 +36,13 @@ class EmailServiceManager: ObservableObject, EmailService {
     init(
         primaryService: EmailService,
         fallbackService: EmailService,
-        selector: EmailServiceSelector = EmailServiceSelector()
+        selector: EmailServiceSelector = EmailServiceSelector(),
+        notificationWrapperService: NotificationWrapperService = NotificationWrapperService()
     ) {
         self.primaryService = primaryService
         self.fallbackService = fallbackService
         self.serviceSelector = selector
+        self.notificationWrapperService = notificationWrapperService
         self.logger = Logger.shared
         
         setupServiceSelector()
@@ -132,9 +135,25 @@ class EmailServiceManager: ObservableObject, EmailService {
                 try await service.sendWelcomeEmail(to: email, userName: userName)
             }
             
+            // Send notification about welcome email
+            await sendEmailNotification(
+                type: "welcome_email",
+                recipient: email,
+                userName: userName,
+                success: true
+            )
+            
             return result
             
         } catch {
+            // Send notification about email failure
+            await sendEmailNotification(
+                type: "welcome_email",
+                recipient: email,
+                userName: userName,
+                success: false,
+                error: error.localizedDescription
+            )
             throw mapErrorForContext(error, emailType: .welcome)
         }
     }
@@ -455,5 +474,42 @@ struct EmailServiceManagerMetrics {
             "uptime": uptime,
             "avg_response_time": averageResponseTime
         ]
+    }
+}
+
+// MARK: - Notification Methods
+
+extension EmailServiceManager {
+    private func sendEmailNotification(
+        type: String,
+        recipient: String,
+        userName: String? = nil,
+        success: Bool,
+        error: String? = nil
+    ) async {
+        let title = success ? "📧 Email Sent" : "❌ Email Failed"
+        let body = success ? 
+            "\(type) sent to \(recipient)" : 
+            "Failed to send \(type) to \(recipient)"
+        
+        let success = await notificationWrapperService.sendNotification(
+            title: title,
+            body: body,
+            identifier: "email_\(type)_\(UUID().uuidString)",
+            userInfo: [
+                "type": "email_notification",
+                "email_type": type,
+                "recipient": recipient,
+                "user_name": userName ?? "",
+                "success": success,
+                "error": error ?? ""
+            ]
+        )
+        
+        if success {
+            logger.info("Email notification sent: \(type) to \(recipient)")
+        } else {
+            logger.info("Email notification not sent (toggle disabled or permission denied)")
+        }
     }
 }
