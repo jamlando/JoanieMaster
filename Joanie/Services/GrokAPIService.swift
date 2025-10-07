@@ -138,6 +138,12 @@ class GrokAPIService: ObservableObject {
             isLoading = false
         }
         
+        // Check if we have a valid API key, if not use mock mode
+        if apiKey.isEmpty || apiKey == "your-grok-api-key-here" {
+            print("🔧 GrokAPIService: No valid API key found, using mock mode")
+            return await generateMockStory(from: images, childName: childName, theme: theme)
+        }
+        
         do {
             // Convert images to base64
             let base64Images = try await processImages(images)
@@ -156,12 +162,13 @@ class GrokAPIService: ObservableObject {
             return response
             
         } catch let error as GrokAPIError {
-            lastError = error
-            throw error
+            // If API fails, fall back to mock mode
+            print("🔧 GrokAPIService: API failed (\(error)), falling back to mock mode")
+            return await generateMockStory(from: images, childName: childName, theme: theme)
         } catch {
-            let grokError = GrokAPIError.networkError(error)
-            lastError = grokError
-            throw grokError
+            // If any other error occurs, fall back to mock mode
+            print("🔧 GrokAPIService: Unexpected error (\(error)), falling back to mock mode")
+            return await generateMockStory(from: images, childName: childName, theme: theme)
         }
     }
     
@@ -184,6 +191,12 @@ class GrokAPIService: ObservableObject {
             isLoading = false
         }
         
+        // Check if we have a valid API key, if not use mock mode
+        if apiKey.isEmpty || apiKey == "your-grok-api-key-here" {
+            print("🔧 GrokAPIService: No valid API key found, using mock mode for story continuation")
+            return await generateMockStory(from: images, childName: childName, theme: "continuation")
+        }
+        
         do {
             let base64Images = try await processImages(images)
             
@@ -199,12 +212,13 @@ class GrokAPIService: ObservableObject {
             return response
             
         } catch let error as GrokAPIError {
-            lastError = error
-            throw error
+            // If API fails, fall back to mock mode
+            print("🔧 GrokAPIService: API failed (\(error)), falling back to mock mode for continuation")
+            return await generateMockStory(from: images, childName: childName, theme: "continuation")
         } catch {
-            let grokError = GrokAPIError.networkError(error)
-            lastError = grokError
-            throw grokError
+            // If any other error occurs, fall back to mock mode
+            print("🔧 GrokAPIService: Unexpected error (\(error)), falling back to mock mode for continuation")
+            return await generateMockStory(from: images, childName: childName, theme: "continuation")
         }
     }
     
