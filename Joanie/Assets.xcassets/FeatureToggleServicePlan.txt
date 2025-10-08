@@ -39,4 +39,395 @@ enum ToggleScope {
 
 #### 4. Notification Toggle Implementation
 - **Wrapper Service**: `NotificationWrapperService` checks toggle and system permissions.
-- **Permission Integration**: Respects `UNUserNotificationCenter`
+- **Permission Integration**: Respects `UNUserNotificationCenter`and app toggle.
+
+
+
+UI Integration: Settings toggle with VoiceOver, Dynamic Type, and haptic feedback.
+
+
+
+Analytics: Track toggle usage with Firebase Analytics.
+
+Implementation Plan
+
+Phase 7.1: Feature Toggle Service Implementation
+
+Task 7.1.1: Design Feature Toggle Architecture (7 sub-tasks)
+
+Sub-tasks:
+
+
+
+
+
+Design FeatureToggle protocol with experimentId for A/B testing.
+
+
+
+Create FeatureToggleService with UserDefaults and Core Data (indexed).
+
+
+
+Implement toggle scope system (global, user, group, device).
+
+
+
+Design notification toggle as first implementation.
+
+
+
+Create FeatureToggleManager with Combine or Swift Concurrency.
+
+
+
+Set up secure storage (Keychain for user IDs, encrypted Core Data).
+
+
+
+Document APIs with SwiftDoc and create developer guide.
+
+Success Criteria:
+
+
+
+
+
+Protocol supports multiple toggle types and A/B testing.
+
+
+
+Service handles offline/online states with <1ms toggle checks.
+
+
+
+Architecture supports user/group targeting and remote updates.
+
+
+
+Notification toggle works globally; state persists securely.
+
+Estimated Time: 2.5-3.5 hours
+
+Task 7.1.2: Implement Notification Toggle (v1) (7 sub-tasks)
+
+Sub-tasks:
+
+
+
+
+
+Create NotificationToggle model and service.
+
+
+
+Implement notification permission checking with UNUserNotificationCenter.
+
+
+
+Add toggle UI in settings with VoiceOver, Dynamic Type, and haptic feedback.
+
+
+
+Create NotificationWrapperService respecting toggle state.
+
+
+
+Update all notification calls to use wrapper service.
+
+
+
+Integrate Firebase Analytics for toggle usage tracking.
+
+
+
+Test notification on/off functionality (unit, UI, edge cases).
+
+Success Criteria:
+
+
+
+
+
+Users can toggle notifications in settings with immediate effect.
+
+
+
+Toggle UI is accessible and responsive.
+
+
+
+Notifications disabled app-wide when toggle is off.
+
+
+
+Toggle state persists securely across launches.
+
+
+
+Analytics track toggle state changes.
+
+Estimated Time: 2.5-3.5 hours
+
+Task 7.1.3: Integrate Toggle Service with Existing Code (7 sub-tasks)
+
+Sub-tasks:
+
+
+
+
+
+Update AuthService to respect notification toggle.
+
+
+
+Update EmailService to check toggle state.
+
+
+
+Update AI service notifications to use wrapper.
+
+
+
+Update progress tracking notifications.
+
+
+
+Add toggle checks to all push notification triggers.
+
+
+
+Implement Sentry logging for toggle errors.
+
+
+
+Test integration with 90% test coverage, including offline scenarios.
+
+Success Criteria:
+
+
+
+
+
+All notification code respects the toggle.
+
+
+
+No notifications bypass the wrapper service.
+
+
+
+Toggle works consistently with <500ms sync latency.
+
+
+
+Errors are logged and handled gracefully.
+
+Estimated Time: 2.5-3.5 hours
+
+Technical Implementation Details
+
+File Structure
+
+Joanie/
+├── Services/
+│   ├── FeatureToggleService.swift
+│   ├── FeatureToggleManager.swift
+│   ├── NotificationToggleService.swift
+│   ├── NotificationWrapperService.swift
+├── Models/
+│   ├── FeatureToggle.swift
+│   ├── NotificationToggle.swift
+│   ├── ToggleScope.swift
+├── ViewModels/
+│   └── SettingsViewModel.swift
+├── Views/
+│   └── SettingsView.swift
+└── Docs/
+    └── FeatureToggleGuide.md
+
+Key Implementation Points
+
+1. Local Storage Strategy
+
+
+
+
+
+Simple Toggles: UserDefaults with TTL (24 hours).
+
+
+
+Complex Toggles: Core Data with indexing, encrypted with NSFileProtectionComplete.
+
+
+
+Caching: In-memory dictionary, max 1MB footprint.
+
+
+
+Sync: Background URLSession with exponential backoff.
+
+2. Notification Integration
+
+
+
+
+
+Wrapper Pattern: All notifications routed through NotificationWrapperService.
+
+
+
+Permission Check: Combines system permissions and toggle state.
+
+
+
+Fallback: Default to notifications off if service fails.
+
+3. UI Integration
+
+
+
+
+
+Settings Toggle: SwiftUI switch with VoiceOver, Dynamic Type, and haptic feedback.
+
+
+
+Real-time Updates: @Published properties for instant UI refresh.
+
+
+
+Error Feedback: Non-intrusive alert for sync failures with retry option.
+
+Future Extensibility
+
+
+
+
+
+User Targeting: User-specific toggles via Supabase queries.
+
+
+
+Group Targeting: Support for beta groups, geographic targeting.
+
+
+
+A/B Testing: Experiment tracking with experimentId.
+
+
+
+Remote Configuration: Real-time updates without app releases.
+
+
+
+Analytics: Usage metrics and adoption tracking.
+
+Risk Assessment
+
+Low Risk Factors
+
+
+
+
+
+✅ Well-defined requirements and success criteria.
+
+
+
+✅ Modular architecture leveraging iOS frameworks.
+
+
+
+✅ Simple v1 implementation with clear scope.
+
+
+
+✅ Comprehensive testing and error handling.
+
+Mitigation Strategies
+
+
+
+
+
+Performance: Lazy loading, caching, and batch operations.
+
+
+
+Reliability: Graceful degradation, default states, Sentry logging.
+
+
+
+Security: Keychain for user data, encrypted Core Data, JWT for Supabase.
+
+
+
+Testing: 90% coverage, CI/CD integration, edge case testing.
+
+Success Metrics
+
+Phase 7.1 Success Criteria
+
+
+
+
+
+Scalable architecture with <1ms toggle checks.
+
+
+
+Notification toggle works app-wide with secure persistence.
+
+
+
+All notifications respect toggle with zero bypasses.
+
+
+
+UI is accessible, responsive, and provides feedback.
+
+
+
+Errors are logged and handled gracefully.
+
+Future Success Metrics
+
+
+
+
+
+Support for user/group targeting within 2 weeks of v1.
+
+
+
+Remote updates without app releases within 4 weeks.
+
+
+
+A/B testing framework within 6 weeks.
+
+
+
+Analytics integration with 95% toggle event coverage.
+
+Timeline Estimate
+
+Total Implementation Time: 7.5-10.5 hours
+
+
+
+
+
+Task 7.1.1: 2.5-3.5 hours (Architecture)
+
+
+
+Task 7.1.2: 2.5-3.5 hours (Notification Toggle)
+
+
+
+Task 7.1.3: 2.5-3.5 hours (Integration)
+
+Ready for Executor Mode: All requirements defined, architecture optimized, implementation strategy refined.

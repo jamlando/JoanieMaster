@@ -16,7 +16,7 @@ struct LandingView: View {
             title: "Upload to Joanie and create stories to share with your child.",
             description: "Transform artwork into magical bedtime stories",
             icon: "book.fill",
-            color: .blue
+            color: .purple
         ),
         LandingSlide(
             title: "Watch your child's creativity grow",
@@ -33,14 +33,21 @@ struct LandingView: View {
                 VStack(spacing: 20) {
                     Spacer()
                     
-                    // App Icon/Logo
-                    Image(systemName: "paintbrush.fill")
-                        .font(.system(size: 80))
-                        .foregroundColor(.blue)
-                        .padding(.bottom, 10)
+                    // App Icon/Logo with Branding
+                    HStack(spacing: 12) {
+                        Image(systemName: "paintbrush.fill")
+                            .font(.system(size: 80))
+                            .foregroundColor(.blue)
+                        
+                        Text("Joanie")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .foregroundColor(.blue)
+                    }
+                    .padding(.bottom, 10)
                     
                     // Hero Text
-                    Text("Turn your kids' drawings into a bedtime story that can continue with all the new drawings your child creates.")
+                    Text("Transform your child's drawings into evolving bedtime stories.")
                         .font(.title2)
                         .fontWeight(.semibold)
                         .multilineTextAlignment(.center)
@@ -60,7 +67,7 @@ struct LandingView: View {
                                 .tag(index)
                         }
                     }
-                    .tabViewStyle(PageTabViewStyle(indexDisplayMode: .automatic))
+                    .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                     .frame(height: 200)
                     
                     // Page Indicator
